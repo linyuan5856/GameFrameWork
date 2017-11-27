@@ -1,15 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
-using UnityEngine.SceneManagement;
 
 public class Performance : MonoBehaviour {
-
-    public static Performance instance;
-
-
+   
     private GUIStyle style;
+    private const int M = 1048576;
     void Awake() {
-		instance = this;
+		
         style = new GUIStyle();
         style.fontSize = 18;
         style.normal.textColor = Color.green;
@@ -19,9 +16,6 @@ public class Performance : MonoBehaviour {
         StartCoroutine(FPS());
 	}
 	
-	void Update () {
-	
-	}
 
     int mFps;
     IEnumerator FPS()
@@ -46,14 +40,14 @@ public class Performance : MonoBehaviour {
         GUI.Label(new Rect(0,temp, 300, 20), new GUIContent("FPS: " + mFps.ToString()),style);
         temp += 20;
         
-        string total = ((float) UnityEngine.Profiling.Profiler.GetTotalAllocatedMemory()/1048576).ToString("f2");
+        string total = ((float) UnityEngine.Profiling.Profiler.GetTotalAllocatedMemoryLong()/ M).ToString("f2");
        
         GUI.Label(new Rect(0, temp, 300, 20),
             new GUIContent("Memory: " + total + " MB"), style);
         temp += 20;
    
         GUI.Label(new Rect(0, temp, 300, 20),
-            new GUIContent("Cache: " + Caching.spaceOccupied/1048576 + " MB/" + Caching.maximumAvailableDiskSpace / 1048576 +" MB"),
+            new GUIContent("Cache: " + Caching.spaceOccupied/ M + " MB/" + Caching.maximumAvailableDiskSpace / 1048576 +" MB"),
             style);
     }
 }

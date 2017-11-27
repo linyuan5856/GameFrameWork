@@ -213,12 +213,12 @@ namespace GFW
             }
         }
 
-
         void Update()
-        {
+        {          
             this.assetDownLoader.UpdateLoad();
             this.abDownLoader.UpdateLoad();
         }
+
     }
 
     public sealed class AssetBundleDownLoader
@@ -258,7 +258,7 @@ namespace GFW
 
             public ABDownloadInfo(string abName, WWWExistType existType, System.Object extraParam)
             {
-                abName = abName;
+                ABName = abName;
                 ExistType = existType;
                 ExtraParam = extraParam;
             }

@@ -1,123 +1,127 @@
 ﻿using System;
 using System.Collections.Generic;
 
-public interface IEvent
+namespace GFW
 {
-    void SetManager(IManager manager);
-
-    void Action();
-}
-public interface IManager
-{
-    void DoNext();
-
-    void Register(IEvent _event);
-}
-
-public abstract class BaseEvent : IEvent
-{
-    private IManager _manager;
-
-    void IEvent.SetManager(IManager manager)
+    public interface IEvent
     {
-        this._manager = manager;
+        void SetManager(IManager manager);
+
+        void Action();
+    }
+    public interface IManager
+    {
+        void DoNext();
+
+        void Register(IEvent _event);
     }
 
-    void IEvent.Action()
+    public abstract class BaseEvent : IEvent
     {
-        OnAction();
-    }
+        private IManager _manager;
 
-    protected abstract void OnAction();
-
-    protected virtual void OnActionEnd()
-    {
-        this._manager.DoNext();
-    }
-}
-
-
-public class EventQueueManager : IManager
-{
-    private Action _endAction;
-    readonly Queue<IEvent> _eventQueue = new Queue<IEvent>();
-
-    public EventQueueManager(Action endAction)
-    {
-        _endAction = endAction;
-    }
-
-    public void Register(IEvent _event)
-    {
-        _event.SetManager(this);
-        _eventQueue.Enqueue(_event);
-    }
-
-    void IManager.DoNext()
-    {
-        bool end = _eventQueue.Count == 0;
-
-        if (end)
+        void IEvent.SetManager(IManager manager)
         {
-            if (this._endAction != null)
+            this._manager = manager;
+        }
+
+        void IEvent.Action()
+        {
+            OnAction();
+        }
+
+        protected abstract void OnAction();
+
+        protected virtual void OnActionEnd()
+        {
+            this._manager.DoNext();
+        }
+    }
+
+
+    public class EventQueueManager : IManager
+    {
+        private Action _endAction;
+        readonly Queue<IEvent> _eventQueue = new Queue<IEvent>();
+
+        public EventQueueManager(Action endAction)
+        {
+            _endAction = endAction;
+        }
+
+        public void Register(IEvent _event)
+        {
+            _event.SetManager(this);
+            _eventQueue.Enqueue(_event);
+        }
+
+        void IManager.DoNext()
+        {
+            bool end = _eventQueue.Count == 0;
+
+            if (end)
+            {
+                if (this._endAction != null)
+                {
+                    this._endAction();
+                }
+                return;
+            }
+            this.TryInvoke();
+        }
+
+        void TryInvoke()
+        {
+            if (_eventQueue.Count > 0)
+            {
+                IEvent _event = _eventQueue.Dequeue();
+
+                _event.Action();
+            }
+        }
+    }
+
+    public class EventparallelManager : IManager
+    {
+        private Action _endAction;
+        private int totalEventSum;
+        private List<IEvent> _events = new List<IEvent>();
+
+        public EventparallelManager(Action endAction)
+        {
+            _endAction = endAction;
+        }
+
+        public void Register(IEvent _event)
+        {
+            _event.SetManager(this);
+            _events.Add(_event);
+            totalEventSum++;
+        }
+
+        public void BeginParallelEvent()
+        {
+
+            if (_events.Count == 0)
             {
                 this._endAction();
             }
-            return;
-        }
-        this.TryInvoke();
-    }
 
-    void TryInvoke()
-    {
-        if (_eventQueue.Count > 0)
+            for (int i = 0; i < _events.Count; i++)
+            {
+                _events[i].Action();
+            }
+        }
+
+        void IManager.DoNext()
         {
-            IEvent _event = _eventQueue.Dequeue();
+            totalEventSum--;
 
-            _event.Action();
-        }
-    }
-}
-
-public class EventparallelManager : IManager
-{
-    private Action _endAction;
-    private int totalEventSum;
-    private List<IEvent> _events = new List<IEvent>();
-
-    public EventparallelManager(Action endAction)
-    {
-        _endAction = endAction;
-    }
-
-    public void Register(IEvent _event)
-    {
-        _event.SetManager(this);
-        _events.Add(_event);
-        totalEventSum++;
-    }
-
-    public void BeginParallelEvent()
-    {
-
-        if (_events.Count==0)
-        {
-            this._endAction();
-        }
-
-        for (int i = 0; i < _events.Count; i++)
-        {
-            _events[i].Action();
+            if (totalEventSum == 0 && this._endAction != null)
+            {
+                _endAction();
+            }
         }
     }
 
-    void IManager.DoNext()
-    {
-        totalEventSum--;
-
-        if (totalEventSum == 0 && this._endAction != null)
-        {
-            _endAction();
-        }
-    }
 }

@@ -24,7 +24,7 @@ public sealed class TimerDefine
 
 }
 
-public class GlobalTimer : MonoBehaviour
+public class TimerManager : MonoBehaviour
 {
     class TimeData
     {
@@ -83,8 +83,8 @@ public class GlobalTimer : MonoBehaviour
         }
     }
 
-    private static GlobalTimer _instance;
-    public static GlobalTimer Instance
+    private static TimerManager _instance;
+    public static TimerManager Instance
     {
         get
         {

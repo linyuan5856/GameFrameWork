@@ -112,6 +112,7 @@ namespace GFW
             }
             catch (Exception ex)
             {
+                Logger.LogError(ex.Message);
                 Logger.LogError("convert error:" + value);
             }
 
@@ -301,7 +302,7 @@ namespace GFW
                         fieldInfo.SetValue(target, 0);
                     }
                     else
-                    {
+                    {                      
                         try
                         {
                             fieldInfo.SetValue(target, int.Parse(value));
@@ -310,6 +311,7 @@ namespace GFW
                         {
                             float tValue = float.Parse(value);
                             fieldInfo.SetValue(target, Mathf.RoundToInt(tValue));
+                            Logger.LogError(ex.ToString());
                         }
                     }
                 }

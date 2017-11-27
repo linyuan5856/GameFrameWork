@@ -10,9 +10,6 @@ namespace GFW
         public List<string> dataList = new List<string>();
         public string tableName;
 
-
-        private List<string[]> dataList2 = new List<string[]>();
-
         private Dictionary<string, int> keyIndexDict = new Dictionary<string, int>();
         private Dictionary<string, NewRow> rowDict = new Dictionary<string, NewRow>();
         private List<NewRow> rowList = new List<NewRow>();

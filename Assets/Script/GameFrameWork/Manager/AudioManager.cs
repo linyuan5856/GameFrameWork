@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class AudioManager : MonoBehaviour
 {
-    static public AudioManager Instance;
+    public static AudioManager Instance;
 
     private AudioSource audio_bg_source;
     private string current_music_name;
@@ -22,12 +22,7 @@ public class AudioManager : MonoBehaviour
         this.audio_run_source = gameObject.AddComponent<AudioSource>();
     }
 
-    public AudioSource audioRunSource
-    {
-        get { return audio_run_source; }
-    }
-  
-    public void StopPlayBG()
+    public void StopPlayBg()
     {
         if (this.audio_bg_source)
         {
@@ -35,7 +30,7 @@ public class AudioManager : MonoBehaviour
         }
     }
 
-    private AudioSource getAudioSource()
+    private AudioSource GetAudioSource()
     {
         AudioSource resultSource = null;
 
@@ -71,17 +66,14 @@ public class AudioManager : MonoBehaviour
 
     private void PlaySound(AudioSource source,AudioClip clip, bool loop)
     {
-        if (source==null)
+        if (source==null||clip==null)
         {
             return;
         }
 
         if (source.clip != null)
         {
-            source.Stop();
-            //AudioClip tempClip = source.clip;
-            //source.clip = null;
-            //Resources.UnloadAsset(tempClip);
+            source.Stop();         
         }
         source.clip = clip;
         source.loop = loop;
