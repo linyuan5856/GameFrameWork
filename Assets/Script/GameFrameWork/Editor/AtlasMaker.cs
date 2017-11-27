@@ -6,7 +6,7 @@ using System.IO;
 class AtlasMaker
 {
    
-    [ MenuItem("Program/AtlasMaker")]
+    [ MenuItem("program/AtlasMaker")]
     static private void MakeAtlas()
     {
 	

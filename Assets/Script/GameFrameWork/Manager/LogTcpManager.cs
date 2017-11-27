@@ -112,16 +112,16 @@ namespace GFW
 
         public void AddLog(string message)
         {
-            long index = log_index.IncrementAndGet();
+           // long index = log_index.IncrementAndGet();
 
             //int playerId = SceneSTable.Instance.SelfVO != null ? SceneSTable.Instance.SelfVO.playerId : -1;
-            string str = "";
+            //string str = "";
             //string.Format(
             //    "{0} Log: | clientId:{1} | index:{2} | serverId:{3} | uid:{4} | roleId:{5} | deviceModel:{6} | screenSize:{7} | {8} | v={9}",
             //    DateTime.Now.ToLocalTime(), clientId, index, Session.SERVER_ID, Session.UID, playerId,
             //    deviceModel, screenSize, message, VersionManager.Instance.LocalVersion + "/" + VersionManager.Instance.Version);
 
-            logQueue.Enqueue(str);
+           // logQueue.Enqueue(str);
         }
 
         protected override void OnUpdate()

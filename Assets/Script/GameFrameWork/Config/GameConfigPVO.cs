@@ -1,8 +1,10 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace GFW
 {
+    /// <summary>
+    /// 该类会读取txt文本后 反射字段赋值 不要乱加字段
+    /// </summary>
     public class GameConfigPVO : Singleton<GameConfigPVO>
     {
         public bool usePerformance;
@@ -19,10 +21,8 @@ namespace GFW
 
         public string getCDNBundleUrl()
         {
-           // string bundleUrl = cdnUrl + "/AssetBundles/v" + VersionManager.Instance.LocalVersion + "/";
-            string bundleUrl = cdnUrl + "/AssetBundles/";
-
-
+             string bundleUrl = cdnUrl + "/AssetBundles/v" + VersionManager.Instance.LocalVersion + "/";
+           
             if (Application.platform == RuntimePlatform.WindowsEditor)
             {
                 bundleUrl += "Windows";
@@ -40,6 +40,26 @@ namespace GFW
                 bundleUrl += "Windows";
             }
             return bundleUrl;
+        }
+
+
+        public  string GetGameConfigPath()
+        {
+            string configPath = string.Empty;
+
+            string fileName = string.Empty;
+#if UNITY_EDITOR || UNITY_STANDALONE_WIN
+            fileName = GameDefine.EDITOR_CONFIG;
+#else
+            fileName = GameDefine.RELEASE_CONFIG;
+#endif
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+           configPath =  Application.streamingAssetsPath+"/"+fileName;
+#else
+            configPath = "file:///" + Application.streamingAssetsPath + "/" + fileName;
+#endif
+            return configPath;
         }
     }
 }

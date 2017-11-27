@@ -18,15 +18,18 @@ namespace GFW
 
         private static void LogWithColor(string message, Color color, int level)
         {
-            //if (level >= LEVEL_LOG)
-            //{
-            //    if (LogTcpManager.Instance != null)
-            //        LogTcpManager.Instance.AddLog(message);
-            //}
+#if UNITY_ANDROID
+             if (level >= LEVEL_LOG)
+            {
+                if (LogTcpManager.Instance != null)
+                    LogTcpManager.Instance.AddLog(message);
+            }
+#endif
+
 
             if (level < logLevel) return;
 
-            int colorInt = ((int) (color.r * 255f) << 16) | ((int) (color.g * 255f) << 8) | (int) (color.b * 255f);
+            int colorInt = ((int)(color.r * 255f) << 16) | ((int)(color.g * 255f) << 8) | (int)(color.b * 255f);
             long nowTime = DateTime.Now.Ticks / 10000; //ms
             long offsetTime = lastLogTime > 0 ? nowTime - lastLogTime : 0;
             lastLogTime = nowTime;
@@ -55,9 +58,12 @@ namespace GFW
             long nowTime = DateTime.Now.Ticks / 10000; //ms
             long offsetTime = lastLogTime > 0 ? nowTime - lastLogTime : 0;
             lastLogTime = nowTime;
-
-            StackTrace st = new StackTrace(true);
+#if UNITY_ANDROID
+             StackTrace st = new StackTrace(true);
             UnityEngine.Debug.LogError("[" + offsetTime + "]-->" + message + st.ToString());
+            return;
+#endif         
+            UnityEngine.Debug.LogError("[" + offsetTime + "]-->" + message);
         }
 
         public static void LogWarn(string message)

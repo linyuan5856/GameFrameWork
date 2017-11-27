@@ -212,7 +212,7 @@ namespace GFW
         {
             System.IO.StringReader _reader = new System.IO.StringReader(configStr);
 
-            NewCSVFile newCSVFile = new NewCSVFile();
+            NewCSVFile newCSVFile = ScriptableObject.CreateInstance<NewCSVFile>();
 
             while (_reader.Peek() >= 0)
             {
