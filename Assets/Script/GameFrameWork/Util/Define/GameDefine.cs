@@ -11,7 +11,7 @@
     public const string TABLE_PATH = "Assets/Script/GameFrameWork/Config/CSVScriptObject/{0}.asset";
 
 
-
+    public const string UI_Canvas = "UICanvas";
 
 
 

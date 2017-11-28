@@ -4,18 +4,16 @@ using UnityEngine;
 
 namespace GFW
 {
-    public class ChatTcpManager : HMMonoBehaviour
+    public class ChatTcpManager : MonoSingleton<ChatTcpManager>
     {
-        static public ChatTcpManager Instance;
-
+        
         protected TcpAsyncConnector mConnector;
         [SerializeField]
         protected string mTcpName;
 
-    
-        void Awake()
+        protected override void Init()
         {
-            Instance = this;
+            base.Init();
             mTcpName = "chatsocket_connect";
         }
 
@@ -46,11 +44,11 @@ namespace GFW
                 case TcpAsyncConnector.C_DISCONNECT:
                 case TcpAsyncConnector.C_CAN_NOT_CONNECT:
                 case TcpAsyncConnector.C_NOT_CONNECTED:
-                    Logger.LogWarn("chat server dis connected...");
+                    GameLogger.LogWarn("chat server dis connected...");
                     StartCoroutine(CO_Reconnnect());
                     break;
                 case TcpAsyncConnector.C_CONNECTED:
-                    Logger.LogWarn("chat server connected...");             
+                    GameLogger.LogWarn("chat server connected...");             
                     break;             
             }
             return true;

@@ -183,7 +183,7 @@ namespace GFW
                 return this.ranges[index];
             }
             
-                Logger.LogError("Index Out Of Range:" + index);
+                GameLogger.LogError("Index Out Of Range:" + index);
                 return null;
         }
 

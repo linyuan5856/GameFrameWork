@@ -22,7 +22,7 @@ namespace GFW
         {
             base.OnLeaveStage();
 
-            Logger.Log("Game PreLoad Is Done");
+            GameLogger.Log("Game PreLoad Is Done");
         }
 
 
@@ -39,16 +39,16 @@ namespace GFW
         void LoadGameConfig()
         {
             string configPath = GameConfigPVO.Instance.GetGameConfigPath();
-            LoaderManager.Instance.HttpGetText(configPath, (text, error) =>
+            LoaderManager.HttpGetText(configPath, (text, error) =>
              {
                  if (!string.IsNullOrEmpty(error))
                  {
-                     Logger.LogError(string.Format("Load  {1} Failed -->Error:  {2} ", configPath, error));
+                     GameLogger.LogError(string.Format("Load  {1} Failed -->Error:  {2} ", configPath, error));
                      return;
                  }
                  ConvertUtil.ToPVO(text, GameConfigPVO.Instance);
-                 Logger.logLevel = GameConfigPVO.Instance.logLevel;
-                 Logger.Log("Load GameConfig OK --> CDN Path:" + GameConfigPVO.Instance.cdnUrl);
+                 GameLogger.logLevel = GameConfigPVO.Instance.logLevel;
+                 GameLogger.Log("Load GameConfig OK --> CDN Path:" + GameConfigPVO.Instance.cdnUrl);
                  InitGameManager();
                  InitVersion();
              });
@@ -62,7 +62,8 @@ namespace GFW
             GameUtil.AddComponentToP<TcpManager>(mainGo);
             GameUtil.AddComponentToP<ChatTcpManager>(mainGo);
             GameUtil.AddComponentToP<TimerManager>(mainGo);
-
+            GameUtil.AddComponentToP<UIManager>(mainGo);
+           
             if (GameConfigPVO.Instance.useRemoteLog)
                 GameUtil.AddComponentToP<LogTcpManager>(mainGo);
             if (GameConfigPVO.Instance.usePerformance)
@@ -70,7 +71,7 @@ namespace GFW
 
             MsgManager.Instance.Regist();
 
-            Logger.Log("GameManager  Init OK");
+            GameLogger.Log("GameManager  Init OK");
         }
 
         void InitVersion()
@@ -81,38 +82,38 @@ namespace GFW
         void LoadLocalVersion()
         {
             string path = VersionManager.Instance.GetStreamingPath() + GameDefine.VERSIONTXT;
-            LoaderManager.Instance.HttpGetText(path, (text, error) =>
+            LoaderManager.HttpGetText(path, (text, error) =>
             {
                 if (!string.IsNullOrEmpty(error))
                 {
-                    Logger.LogError("LoadLocalVersion Error:" + error);
+                    GameLogger.LogError("LoadLocalVersion Error:" + error);
                 }
                 else
                 {
-                    Logger.LogTest("LocalVersion:" + text);
+                    GameLogger.LogTest("LocalVersion:" + text);
                     VersionManager.Instance.SetLocalVersion(text);
                     this.LoadServerVersion();
                 }
             });
 
-            Logger.Log("Bundle Path:" + GameConfigPVO.Instance.getCDNBundleUrl());
+            GameLogger.Log("Bundle Path:" + GameConfigPVO.Instance.getCDNBundleUrl());
         }
 
         void LoadServerVersion()
         {
             string path = GameUtil.AddString(GameConfigPVO.Instance.getCDNBundleUrl(), GameDefine.VERSIONTXT, "?r=", UnityEngine.Random.Range(0, 9999999));
 
-            LoaderManager.Instance.HttpGetText(path, (text, error) =>
+            LoaderManager.HttpGetText(path, (text, error) =>
             {
-                Logger.LogTest("ServerVersionPath:" + path);
+                GameLogger.LogTest("ServerVersionPath:" + path);
 
                 if (!string.IsNullOrEmpty(error))
                 {
-                    Logger.LogError(string.Format("LoadSeverVersion Error: {0} .. URL {1} ", error, path));
+                    GameLogger.LogError(string.Format("LoadSeverVersion Error: {0} .. URL {1} ", error, path));
                     return;
                 }
 
-                Logger.LogTest("SeverVersion:" + text);
+                GameLogger.LogTest("SeverVersion:" + text);
 
                 VersionManager.Instance.SetServerVersion(text);
 
@@ -122,20 +123,20 @@ namespace GFW
 
         void LoadSeverList()
         {
-            Logger.Log("Version Compare");
+            GameLogger.Log("Version Compare");
 
             if (VersionManager.Instance.LocalVersion != VersionManager.Instance.SeverVersion)
             {
-                Logger.Log(string.Format("服务器 与 本地版本号不同 Sever -->{0}  .. Client-->{1}", VersionManager.Instance.SeverVersion, VersionManager.Instance.LocalVersion));
+                GameLogger.Log(string.Format("服务器 与 本地版本号不同 Sever -->{0}  .. Client-->{1}", VersionManager.Instance.SeverVersion, VersionManager.Instance.LocalVersion));
             }
             else
             {
-                Logger.Log("服务器列表 读取完毕");
+                GameLogger.Log("服务器列表 读取完毕");
             }
 
-            Logger.Log("版本检测通过 开始读取服务器列表");
+            GameLogger.Log("版本检测通过 开始读取服务器列表");
             string url = GameConfigPVO.Instance.getCDNBundleUrl();
-            LoaderManager.Instance.HttpGetText(url + "/ServerList.csv?" + UnityEngine.Random.Range(0, 9999999), (txt, err) =>
+            LoaderManager.HttpGetText(url + "/ServerList.csv?" + UnityEngine.Random.Range(0, 9999999), (txt, err) =>
             {
                 if (!string.IsNullOrEmpty(err))
                 {
@@ -159,7 +160,7 @@ namespace GFW
                         sb.Append(row.rowArr[i].ToString()).Append("|");
 
                     }
-                    Logger.LogWarn(sb.ToString());
+                    GameLogger.LogWarn(sb.ToString());
                 }
 
                 this.DownLoadAssetBundles();
@@ -182,17 +183,17 @@ namespace GFW
             for (int i = 0; i < totalCount; i++)
             {
                 string tableName = PreLoadAssetCatalog.TableList[i];
-                Logger.Log("load table:" + tableName);
+                GameLogger.Log("load table:" + tableName);
                 long time = DateTime.Now.Ticks;
                 LoaderManager.Instance.LoadTable(tableName);
                 long costTime = (DateTime.Now.Ticks - time) / 10000;
                 if (costTime > 10)
-                    Logger.LogWarn(tableName + " cost time:" + costTime);
+                    GameLogger.LogWarn(tableName + " cost time:" + costTime);
                 yield return null;
             }
 
             // ConvertUtil.NewCSVToStaticClass((NewCSVFile)LoaderManager.Instance.LoadTable("ActivityBase", "Key"), typeof(CSV_ActivityBase));
-            Logger.Log("Load Table Done");
+            GameLogger.Log("Load Table Done");
             StartLoadAsset();
         }
 
@@ -203,7 +204,8 @@ namespace GFW
 
         void BeginGame()
         {
-            Logger.Log("Preload Ready-->Enter Game");
+            GameLogger.Log("Preload Ready-->Enter Game");
+            MainGame.Instance.ChangeState<GameState>();
         }
 
     }

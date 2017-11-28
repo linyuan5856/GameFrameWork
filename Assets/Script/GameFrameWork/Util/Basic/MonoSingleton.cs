@@ -5,9 +5,9 @@ using UnityEngine;
 
 namespace GFW
 {
-    public abstract class MonoSingleton<T> :MonoBehaviour where T : MonoSingleton<T>
+    public abstract class MonoSingleton<T> : HMMonoBehaviour where T : MonoSingleton<T>
     {
-
+      
         private static T m_Instance = null;
 
         public static T Instance
@@ -16,23 +16,24 @@ namespace GFW
             {
                 if (m_Instance == null)
                 {
-                    m_Instance = GameObject.FindObjectOfType(typeof(T)) as T;
-                    if (m_Instance == null)
-                    {
-                        m_Instance = new GameObject("Singleton of " + typeof(T).ToString(), typeof(T)).GetComponent<T>();                 
-                    }
-
-                }               
+                    GameLogger.LogError(string.Format("{0} 's Instance is Not Init",typeof(T).Name));
+                }
                 return m_Instance;
             }
         }
 
-        private void Awake()
+        void Awake()
         {
             if (m_Instance == null)
             {
                 m_Instance = this as T;
+                this.Init();
             }
+        }
+
+        protected virtual void Init()
+        {
+
         }
     }
 }

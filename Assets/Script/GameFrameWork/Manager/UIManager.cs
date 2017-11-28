@@ -1,307 +1,193 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
 namespace GFW
 {
-    public class UINewManager : MonoBehaviour
+    public class UIManager : MonoSingleton<UIManager>
     {
-        static private UINewManager _Instance;
+        private readonly Dictionary<string, UIWindow> _cacheUiDict = new Dictionary<string, UIWindow>();
+        private readonly Dictionary<string, Boolean> _loadingUiDict = new Dictionary<string, bool>();
+        private readonly Dictionary<string, UIWindow> _openedUiDict = new Dictionary<string, UIWindow>();
+        private readonly Dictionary<string, UICanvasController> _cacheCanvasDict = new Dictionary<string, UICanvasController>();
 
-        static private UINewManager Instance
+        private GameObject _uiRoot;
+
+        protected override void Init()
         {
-            get
-            {
-                if (_Instance == null)
-                {
-                    string path = "";//todo
-                    GameObject cacheRootCanvas = (GameObject)GameObject.Instantiate(Resources.Load(path));
-                    GameObject.DontDestroyOnLoad(cacheRootCanvas);
-                    cacheRootCanvas.name = path;
-
-                    _Instance = cacheRootCanvas.GetComponent<UINewManager>();
-                    _Instance.overLayCanvas = cacheRootCanvas.transform.Find("Canvas").gameObject;
-                    _Instance.mCacheRootGO = cacheRootCanvas;
-                    _Instance.mEventSystem = cacheUIRoot.GetComponentInChildren<EventSystem>();                  
-                    Logger.LogTest("UINewManager Create New Instance");
-                }
-                return _Instance;
-            }
+            base.Init();
+            _uiRoot = new GameObject("UiRoot");
         }
 
-        static public UINewManager CreateUIManager()
+        private UIManager()
         {
-            return Instance;
+
         }
 
-        static public UINewManager TryGetInstance
+        public void OpenWindow<T>(params object[] param) where T : UIWindow
         {
-            get { return _Instance; }
+            OpenWindowByParam(typeof(T).Name, param);
         }
 
-        static public GameObject OverLayCanvas
+        public void OpenWindow(string uiName, params object[] param)
         {
-            get
-            {
-                if (TryGetInstance != null)
-                {
-                    return TryGetInstance.overLayCanvas;
-                }
-                return null;
-            }
+            OpenWindowByParam(uiName, param);
         }
 
-        static public GameObject CameraCanvas
+        public bool HasWindowOpened<T>()
         {
-            get
-            {
-                if (TryGetInstance != null)
-                {
-                    return TryGetInstance.carmeraCanvas;
-                }
-                return null;
-            }
+            String ui = typeof(T).Name;
+            return _openedUiDict.ContainsKey(ui);
         }
 
-        static public Vector2 GetScreenSize()
+        public void CloseAllWindow()
         {
-            RectTransform canvasTrans = (RectTransform)OverLayCanvas.transform;
-            return canvasTrans.sizeDelta;
+            CloseAllPopWindow();
         }
 
-        static public GameObject cacheUIRoot
+        public void CloseWindow<T>() where T : UIWindow
         {
-            get
-            {
-                if (TryGetInstance != null)
-                {
-                    return TryGetInstance.mCacheRootGO;
-                }
-                return null;
-            }
+            Instance.Close<T>();
         }
 
-        void OnDestroy()
-        {
-            animatedMainUI = null;
-            _Instance = null;
-        }
-
-        private GameObject mCacheRootGO;
-        private GameObject overLayCanvas;
-        private GameObject carmeraCanvas;
-        private EventSystem mEventSystem;
-
-        private Dictionary<string, GameObject> uiCacheDict = new Dictionary<string, GameObject>();
-        private Dictionary<string, Boolean> loadingUIDict = new Dictionary<string, bool>();
-        private Dictionary<string, UIWindow> openedUIDict = new Dictionary<string, UIWindow>();
-        private Dictionary<string, UIWindow> allUIDict = new Dictionary<string, UIWindow>();
-
-        static private Type animatedMainUI = null;
-
-       
-
-        static public void OpenWindow<T>(params object[] _param) where T : UIWindow
-        {
-           
-            Instance.OpenWindowByParam(typeof(T).Name, _param);
-        }
-        static public void OpenWindow(string uiName, params object[] _param)
-        {
-          
-            Instance.OpenWindowByParam(uiName, _param);
-        }
-        static public void JumpWindow<T>(params object[] _param) where T : UIWindow
-        {         
-            Instance.OpenWindowByParam(typeof(T).Name, _param);
-        }
-
-        static public bool ContainWindow(string uiName)
-        {
-            if (TryGetInstance != null)
-            {
-                return TryGetInstance.allUIDict.ContainsKey(uiName);
-            }
-            return false;
-        }
-
-
-        static public bool HasWindowOpened<T>()
-        {
-            if (TryGetInstance != null)
-            {
-                String ui = typeof(T).Name;
-                return TryGetInstance.openedUIDict.ContainsKey(ui);
-            }
-            return false;
-        }
-
-        static public void CloseAllWindow()
-        {
-            if (TryGetInstance != null)
-            {
-                animatedMainUI = null;
-                TryGetInstance.closeAllPopWindow();
-            }
-        }
-
-        static public void CloseWindow<T>() where T : UIWindow
-        {
-            if (TryGetInstance != null)
-                TryGetInstance.Close<T>();
-            else
-            {
-               Logger.LogWarn("close failed because uinewmanager root donot exist");
-            }
-        }
-
-        static public T FindWindow<T>() where T : UIWindow
-        {
-            if (TryGetInstance != null)
-                return TryGetInstance.Find<T>();
-            return null;
-        }
-        static public void SetEventSystemActive(bool active)
-        {
-            if (TryGetInstance != null)
-                TryGetInstance.SetEventSystem(active);
-        }
-
-        private T Find<T>() where T : UIWindow
+        public T FindWindow<T>() where T : UIWindow
         {
             string uiName = typeof(T).Name;
-            if (uiCacheDict.ContainsKey(uiName))
+            if (_cacheUiDict.ContainsKey(uiName))
             {
-                GameObject go = uiCacheDict[uiName];
-                T t = go.GetComponent<T>();
+                T t = _cacheUiDict[uiName] as T;
+                if (t == null)
+                {
+                    GameLogger.LogError(String.Format("FindWindow {0} Exception", uiName));
+                }
                 return t;
             }
             return null;
         }
 
-        private void closeAllPopWindow()
+
+        private void OpenWindowByParam(string uiName, params object[] param)
         {
-            if (openedUIDict.Count > 0)
+            GameLogger.Log("OpenWindow:" + uiName);
+            if (_loadingUiDict.ContainsKey(uiName) && _loadingUiDict[uiName])
             {
-                foreach (var value in new List<UIWindow>(openedUIDict.Values))
+                GameLogger.LogError("ignore repeated ui load:" + uiName);
+                return;
+            }
+
+            if (_cacheUiDict.ContainsKey(uiName))
+            {
+                DirectOpenWindow(uiName, _cacheUiDict[uiName], param);
+                return;
+            }
+
+            _loadingUiDict[uiName] = true;
+
+            LoadWindow(uiName, window =>
+            {
+                _cacheUiDict[uiName] = window;
+                DirectOpenWindow(uiName, window, param);
+            }, param);
+        }
+
+        private void LoadWindow(string uiName, Action<UIWindow> callback, params object[] param)
+        {
+            LoaderManager.Instance.LoadAssetAsync<UnityEngine.Object>(uiName, AssetType.UI, null, (asset, extraObj) =>
+            {
+                _loadingUiDict[uiName] = false;
+                if (asset != null)
                 {
-                    if (value.uiType != UIType.other)
+                    var canvasAsset = LoaderManager.Instance.LoadAsset<GameObject>(GameDefine.UI_Canvas, AssetType.UI);
+                    var canvas = (GameObject)UnityEngine.Object.Instantiate(canvasAsset, _uiRoot.transform);
+
+                    var controller = canvas.GetComponent<UICanvasController>();
+                    this._cacheCanvasDict[uiName] = controller;
+
+                    GameObject ui = (GameObject)UnityEngine.Object.Instantiate(asset, controller.transform);
+                    ui.name = uiName;
+                    var window = ui.GetComponent<UIWindow>();
+                    window.transform.SetParent(controller.transform);
+                    if (callback != null)
                     {
-                        value.CloseWindow();
+                        callback(window);
                     }
                 }
-            }
-        }
-        private void OpenWindowByParam(string uiName, params object[] _param)
-        {
-           Logger.Log("OpenWindow:" + uiName);
-            if (loadingUIDict.ContainsKey(uiName) && loadingUIDict[uiName] == true)
-            {
-                Logger.LogError("ignore repeated ui load:" + uiName);
-                return;
-            }
-
-            if (uiCacheDict.ContainsKey(uiName))
-            {
-                DirectOpenWindow(uiName, uiCacheDict[uiName], _param);
-                return;
-            }
-
-            loadingUIDict[uiName] = true;
-            //todo
-            //LoaderManager.Instance.LoadUIPrefabAysnc(uiName, (asset) =>
-            //{
-            //    loadingUIDict[uiName] = false;
-            //    if (asset != null)
-            //    {
-            //        GameObject go = (GameObject)GameObject.Instantiate(asset);
-            //        go.name = uiName;
-
-            //        uiCacheDict[uiName] = go;
-            //        DirectOpenWindow(uiName, go, _param);
-            //    }
-            //});
+            });
         }
 
-        private void DirectOpenWindow(string uiName, GameObject go, params object[] _param)
+        private void DirectOpenWindow(string name, UIWindow window, params object[] param)
         {
-            //
-            if (_Instance == null) return;
-            Type type = Type.GetType(uiName);
-            /////////
-            UIWindow t = (UIWindow)go.GetComponent(type);
-            t.SetParamList(_param);
-            t.actionOpen = OnWindowOpen;
-            t.actionClose = OnWindowClose;
-            //
-            t.InitWindow();
-            t.OpenWindow();
-        }
+            SetCanvas(name, true);
 
-        private void OnWindowOpen(UIWindow window)
-        {
-            string windowName = window.name;
-                 
-            if (openedUIDict.ContainsKey(windowName))
+            window.SetParamList(param);
+            window.InitWindow();
+            window.OpenWindow();
+            if (_openedUiDict.ContainsKey(name))
             {
-               Logger.LogWarn(windowName + " has been opened");
+                GameLogger.LogWarn(name + " has been opened");
             }
             else
             {
-                openedUIDict.Add(window.name, window);
-            }
-            if (!allUIDict.ContainsKey(windowName))
-            {
-                allUIDict.Add(windowName, window);
+                _openedUiDict.Add(window.name, window);
             }
         }
 
-        private void OnWindowClose(UIWindow window)
+        private void DirectCloseWindow(UIWindow window)
         {
-            openedUIDict.Remove(window.name);
+            window.CloseWindow();
+            string uiname = window.name;
+            SetCanvas(uiname,false);
+            _openedUiDict.Remove(uiname);
         }
 
-       
+        private void CloseAllPopWindow()
+        {
+            if (_openedUiDict.Count > 0)
+            {
+                foreach (var window in new List<UIWindow>(_openedUiDict.Values))
+                {
+                    DirectCloseWindow(window);
+                }
+            }
+        }
+
+        private void SetCanvas(string name, bool enable)
+        {
+            if (this._cacheCanvasDict.ContainsKey(name))
+            {
+                this._cacheCanvasDict[name].SetEnable(enable);
+            }
+            else
+            {
+                 GameLogger.LogError(string.Format("UI {0} 's Canvas Miss",name));
+            }
+        }
+
 
         private void Close<T>() where T : UIWindow
         {
             string uiName = typeof(T).Name;
-            if (uiCacheDict.ContainsKey(uiName))
+            if (_cacheUiDict.ContainsKey(uiName))
             {
-                GameObject go = uiCacheDict[uiName];
-                T t = go.GetComponent<T>();
-                t.CloseWindow();
+                var window = _cacheUiDict[uiName];
+                DirectCloseWindow(window);
             }
         }
 
-        private void DestoryWindow<T>()
+        private void DestroyWindow<T>()
         {
             string uiName = typeof(T).Name;
-            if (uiCacheDict.ContainsKey(uiName))
+            if (_cacheUiDict.ContainsKey(uiName))
             {
-                GameObject go = uiCacheDict[uiName];
-                uiCacheDict.Remove(uiName);
+                var window = _cacheUiDict[uiName];
+                _cacheUiDict.Remove(uiName);
 
-                GameObject.DestroyImmediate(go);
+                DestroyImmediate(window.gameObject);
             }
         }
 
-        private void SetEventSystem(bool active)
-        {
-            if (mEventSystem.enabled != active)
-                mEventSystem.enabled = active;
-        }
-
-        //private void LoadUIAysnc<T>(Action<GameObject> callback)
-        //{
-        //    string uiName = typeof(T).Name;
-
-        //}
-
-        //
-
-
     }
-
 }

@@ -129,7 +129,7 @@ namespace GFW
             }         
         }
 
-        [MenuItem("program/Config/GenerateCSVPathEditor", false, 0)]
+        [MenuItem("program/Config/GenerateCSVPath", false, 101)]
         private static void GenerateCsvPathEditor()
         {
             if (_csvPathEditor!=null)
@@ -145,8 +145,8 @@ namespace GFW
             }
             Selection.activeObject = CsvPathEditor;
         }
-
-        [MenuItem("program/Config/ConvertAllTable", false, 0)]
+        
+        [MenuItem("program/Config/ConvertAllTable", false, 103)]
         private static void BuildAllTable()
         {
             if (!Directory.Exists(Path_GenerateExcel))
@@ -171,13 +171,13 @@ namespace GFW
 
             AssetDatabase.Refresh();
             EditorUtility.ClearProgressBar();
-            Logger.Log("Convert Complete!");
+            GameLogger.Log("Convert Complete!");
         }
 
         private static void BuildOneServerTable(MySqlConnection conn, string path, string tableName)
         {
             EditorUtility.DisplayProgressBar("ConvertTable", path, UnityEngine.Random.value);
-            Logger.Log("ConvertServerTable : " + tableName + " " + path);
+            GameLogger.Log("ConvertServerTable : " + tableName + " " + path);
 
             FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read);
             IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream);
@@ -231,7 +231,7 @@ namespace GFW
             }
             if (fieldDict.Count == 0)
             {
-                Logger.LogWarn(tableName + " no field is server , ingore");
+                GameLogger.LogWarn(tableName + " no field is server , ingore");
                 return;
             }
 
@@ -280,7 +280,7 @@ namespace GFW
                 }
                 else
                 {
-                    Logger.LogError(string.Format("rowRead Error：{0} {1}", tableName, excelReader.GetString(1)));
+                    GameLogger.LogError(string.Format("rowRead Error：{0} {1}", tableName, excelReader.GetString(1)));
                 }
                 rowCount++;
             }
@@ -311,7 +311,7 @@ namespace GFW
             mysqlcon.Dispose();
         }
 
-        [MenuItem("program/Config/ConvertOneTable", false, 0)]
+        [MenuItem("program/Config/ConvertOneTable", false,102)]
         private static void BuildOneTable()
         {
             if (!Directory.Exists(Path_GenerateExcel))
@@ -345,10 +345,10 @@ namespace GFW
             }
             else
             {
-                Logger.LogError("cannot find table config");
+                GameLogger.LogError("cannot find table config");
             }
             EditorUtility.ClearProgressBar();
-            Logger.Log("Convert Complete!");
+            GameLogger.Log("Convert Complete!");
         }
 
         private static void BuildOneTable(string tableTypeName, string rowTypeName, string path)
@@ -359,7 +359,7 @@ namespace GFW
 
             if (tableType == null || rowType == null)
             {
-                Logger.LogError(string.Format("table type not find :{0}", tableTypeName));
+                GameLogger.LogError(string.Format("table type not find :{0}", tableTypeName));
                 return;
             }
 
@@ -429,14 +429,14 @@ namespace GFW
                         string value = excelReader.IsDBNull(index) ? "" : excelReader.GetString(index);
                         if (!ConvertUtil.SetFieldValue(fieldInfoList[index], rowCVO, value))
                         {
-                            Logger.LogError(tableTypeName + " row:" + rowCount);
+                            GameLogger.LogError(tableTypeName + " row:" + rowCount);
                         }
                     }
                     newHeroTable.AddRow(rowCVO);
                 }
                 else
                 {
-                    Logger.LogError(string.Format("rowRead Error：{0} {1}", tableTypeName, excelReader.GetString(1)));
+                    GameLogger.LogError(string.Format("rowRead Error：{0} {1}", tableTypeName, excelReader.GetString(1)));
                 }
                 rowCount++;
             }
@@ -534,7 +534,7 @@ namespace GFW
         }
 
 
-        [MenuItem("program/Config/BuildAllServerTable", false, 0)]
+        [MenuItem("program/Config/BuildAllServerTables", false, 202)]
         private static void BuildAllServerTable()
         {
             if (!Directory.Exists(Path_GenerateExcel))
@@ -542,7 +542,7 @@ namespace GFW
 
             try
             {
-                Logger.Log(CsvPathEditor.Path_ExcelInputDir);
+                GameLogger.Log(CsvPathEditor.Path_ExcelInputDir);
                 List<string> list = new List<string>();
                 GetAllFile(CsvPathEditor.Path_ExcelInputDir, list);
 
@@ -559,13 +559,13 @@ namespace GFW
                     BuildOneServerTable(conn, path, "df_" + tableName.ToLower());
                     CloseConn(conn);
                 }
-                Logger.Log("Convert Complete!");
+                GameLogger.Log("Convert Complete!");
                 EditorUtility.ClearProgressBar();
                 EditorUtility.DisplayDialog("提示", "打表成功", "好的");
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex.ToString());
+                GameLogger.LogError(ex.ToString());
                 EditorUtility.ClearProgressBar();
                 EditorUtility.DisplayDialog("提示", "打表失败！！！！！", "好的");
             }
@@ -587,7 +587,7 @@ namespace GFW
             }
         }
 
-        [MenuItem("program/Config/ConfigBuildOneServerTable", false, 0)]
+        [MenuItem("program/Config/BuildOneServerTable", false,201)]
         private static void BuildOneServerTable()
         {
             if (!Directory.Exists(Path_GenerateExcel))
@@ -606,13 +606,13 @@ namespace GFW
                 BuildOneServerTable(conn, path, "df_" + tableName.ToLower());
                 CloseConn(conn);
 
-                Logger.Log("Convert Complete!");
+                GameLogger.Log("Convert Complete!");
                 EditorUtility.ClearProgressBar();
                 EditorUtility.DisplayDialog("提示", "打表成功", "好的");
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex.ToString());
+                GameLogger.LogError(ex.ToString());
                 EditorUtility.ClearProgressBar();
                 EditorUtility.DisplayDialog("提示", "打表失败！！！！！", "好的");
             }

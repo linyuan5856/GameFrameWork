@@ -14,7 +14,7 @@ namespace GFW
         public sealed override void EnterState()
         {
             mIsStageLoaded = false;
-            Logger.Log(string.Format("Scene [{0}] Loaded Complete：", SceneManager.GetActiveScene().name));
+            GameLogger.Log(string.Format("Scene [{0}] Loaded Complete：", SceneManager.GetActiveScene().name));
             OnInitStage();    
             mIsStageLoaded = true;
         }

@@ -5,9 +5,9 @@ using UnityEngine;
 
 namespace GFW
 {
-    public class LogTcpManager : HMMonoBehaviour
+    public class LogTcpManager : MonoSingleton<LogTcpManager>
     {
-        static public LogTcpManager Instance;
+       
 
         protected TcpAsyncConnector mConnector;
         [SerializeField]
@@ -20,9 +20,9 @@ namespace GFW
 
         private float updateTime;
 
-        void Awake()
+        protected override void Init()
         {
-            Instance = this;
+            base.Init();
             mTcpName = "log_conn";
 
             //clientId = GameUtil.GetDeviceId();
@@ -35,6 +35,7 @@ namespace GFW
 
             updateTime = Time.time;
         }
+
         private void Connect(string ip, int port)
         {
             if (mConnector != null && mConnector.Connected)

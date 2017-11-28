@@ -13,7 +13,7 @@ namespace GFW
             FieldInfo fieldInfo = this.GetType().GetField(fieldName);
             if (fieldInfo == null)
             {
-                Logger.LogWarn("can not find field on " + this + " " + this.GetType().Name);
+                GameLogger.LogWarn("can not find field on " + this + " " + this.GetType().Name);
                 return;
             }
             try
@@ -22,7 +22,7 @@ namespace GFW
             }
             catch (System.Exception ex)
             {
-                Logger.LogError("set value failed: " + this.GetType().Name + " " + fieldInfo.Name + ex.Message);
+                GameLogger.LogError("set value failed: " + this.GetType().Name + " " + fieldInfo.Name + ex.Message);
             }
             _changed = true;
             if (_locked) return;

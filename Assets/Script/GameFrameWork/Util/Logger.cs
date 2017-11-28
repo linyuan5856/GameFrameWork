@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace GFW
 {
-    public class Logger
+    public class GameLogger
     {
         public static int logLevel = 0;
 

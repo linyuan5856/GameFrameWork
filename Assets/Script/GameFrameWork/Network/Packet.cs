@@ -196,7 +196,7 @@ namespace GFW
         {
             if (mCachedProto != null)
             {
-                Logger.LogWarn("Pack Proto Read From Cache:" + typeof(T));
+                GameLogger.LogWarn("Pack Proto Read From Cache:" + typeof(T));
                 return (T)mCachedProto;
             }
 

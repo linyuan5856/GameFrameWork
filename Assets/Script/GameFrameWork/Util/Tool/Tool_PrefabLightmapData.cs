@@ -106,7 +106,7 @@ namespace GFW
 
                 if (info.renderer == null)
                 {
-                    Logger.LogWarn(string.Format("render info lost index:{0}, try rebake this scene to fixed it",
+                    GameLogger.LogWarn(string.Format("render info lost index:{0}, try rebake this scene to fixed it",
                         i));
                     continue;
                 }
@@ -249,7 +249,7 @@ namespace GFW
             var importer = AssetImporter.GetAtPath(filename) as TextureImporter;
             if (importer == null)
             {
-                Logger.LogError("can not find light map texture asset:" + filename);
+                GameLogger.LogError("can not find light map texture asset:" + filename);
             }
             importer.isReadable = true;
             AssetDatabase.ImportAsset(filename, ImportAssetOptions.ForceUpdate);

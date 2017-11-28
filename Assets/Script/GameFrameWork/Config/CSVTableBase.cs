@@ -36,14 +36,14 @@ namespace GFW
                     }
                     else
                     {
-                        GFW.Logger.LogError(string.Format("主键重复 Table名称 {0}  主键 {1} ", this.GetType().Name, key));
+                        GFW.GameLogger.LogError(string.Format("主键重复 Table名称 {0}  主键 {1} ", this.GetType().Name, key));
                     }
 
                 }
                 catch (Exception ex)
                 {
-                    GFW.Logger.Log("RowKey is:" + row.getKey());
-                    GFW.Logger.LogError(ex.ToString());
+                    GFW.GameLogger.Log("RowKey is:" + row.getKey());
+                    GFW.GameLogger.LogError(ex.ToString());
                 }
             }
         }
@@ -61,7 +61,7 @@ namespace GFW
             if (rowIndexDict.ContainsKey(id))
                 return rowIndexDict[id];
             else
-                GFW.Logger.LogError(string.Format("can not find table data: {0} ,{1}", this.GetType().Name, id));
+                GFW.GameLogger.LogError(string.Format("can not find table data: {0} ,{1}", this.GetType().Name, id));
             return default(T);
         }
 

@@ -18,7 +18,7 @@ namespace GFW
                     int index = Array.IndexOf(invocationList, _callback);
                     if (index != -1)
                     {
-                        Logger.LogWarn("repeated listener regist,eventcode:" + _eventCode);
+                        GameLogger.LogWarn("repeated listener regist,eventcode:" + _eventCode);
                         return;
                     }
                 }

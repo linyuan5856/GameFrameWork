@@ -9,16 +9,17 @@ namespace GFW
         private const int HighFrame = 40;
         private int _gameFrame;
 
-
-        void Awake()
+        protected override void Init()
         {
+            base.Init();
             this.InitGameSetting();
             this.InitGameState();
         }
 
+       
         void InitGameSetting()
         {
-            Logger.Log("MainGame Init");
+            GameLogger.Log("MainGame Init");
             DontDestroyOnLoad(this.gameObject);
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             Screen.orientation = ScreenOrientation.Landscape;
@@ -35,7 +36,7 @@ namespace GFW
             stateMachine = new StateMachine();
             stateMachine.RegisterState(new PreLoadState());
             stateMachine.RegisterState(new GameState());
-            Instance.ChangeStage<PreLoadState>();
+            Instance.ChangeState<PreLoadState>();
         }
 
 
@@ -44,7 +45,7 @@ namespace GFW
             stateMachine.OnUpdate();
         }
 
-        public void ChangeStage<T>(object param = null)
+        public void ChangeState<T>(object param = null)
         {
             stateMachine.ChangeState<T>(param);
         }

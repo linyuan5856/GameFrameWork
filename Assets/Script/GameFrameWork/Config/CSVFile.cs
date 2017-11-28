@@ -25,7 +25,7 @@ namespace GFW
             }
 
             if (!keyIndexDict.ContainsKey(key))
-                Logger.LogError(string.Format("table {0} cannot find key {1}:", tableName, key));
+                GameLogger.LogError(string.Format("table {0} cannot find key {1}:", tableName, key));
 
             int keyIndex = keyIndexDict[key];
             for (int i = 1; i < dataList.Count; i++)
@@ -36,7 +36,7 @@ namespace GFW
 
                 string value = valueArr[keyIndex];
                 if (rowDict.ContainsKey(value))
-                    Logger.LogError(string.Format("table {0} add repeat key {1} {2}", tableName, key, value));
+                    GameLogger.LogError(string.Format("table {0} add repeat key {1} {2}", tableName, key, value));
 
                 rowDict.Add(value, row);
                 rowList.Add(row);

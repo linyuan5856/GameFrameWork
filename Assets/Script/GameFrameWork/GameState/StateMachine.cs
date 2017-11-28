@@ -68,7 +68,7 @@ namespace GFW
         }
         private void ChangeState(string stateName, object param)
         {
-            Logger.Log("Change State:" + stateName);
+            GameLogger.Log("Change State:" + stateName);
             State state = FindState(stateName);
             if (state != null)
             {

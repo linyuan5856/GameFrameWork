@@ -1,7 +1,7 @@
 //是否开启性能提示
-usePerformance=true
+usePerformance=false
 //
-logLevel=0
+logLevel=10
 useRemoteLog=false
 logServerIp=139.196.180.199
 logServerPort=8899

@@ -129,7 +129,7 @@ namespace GFW
 
                 if (this.connected.Get())
                 {
-                    Logger.Log("[socket] tcp connected:(" + ip + ":" + port + ")");
+                    GameLogger.Log("[socket] tcp connected:(" + ip + ":" + port + ")");
                     this.start_io_thread();
                     this.chan_recv.Write(new Packet(TcpAsyncConnector.C_CONNECTED));
 
@@ -141,7 +141,7 @@ namespace GFW
                 else
                 {
                     this.chan_recv.Write(new Packet(TcpAsyncConnector.C_CAN_NOT_CONNECT));
-                    Logger.LogWarn("[socket] tcp can't connect:(" + ip + ":" + port + ")");
+                    GameLogger.LogWarn("[socket] tcp can't connect:(" + ip + ":" + port + ")");
                 }
             });
             this.fd.ConnectAsync(connectArgs);
@@ -176,7 +176,7 @@ namespace GFW
         {
             if (pack == null || !this.connected.Get())
             {
-                Logger.LogError("[socket] send failed");
+                GameLogger.LogError("[socket] send failed");
                 return;
             }
             this.chan_sent.Write(pack);
@@ -187,7 +187,7 @@ namespace GFW
             if (!this.connected.GetAndSet(false))
                 return;
 
-            Logger.LogWarn(" [socket] disconnect: " + info);
+            GameLogger.LogWarn(" [socket] disconnect: " + info);
 
             this.chan_recv.Write(new Packet(TcpAsyncConnector.C_DISCONNECT));
             this.chan_sent.Close();
@@ -199,14 +199,14 @@ namespace GFW
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex.Message);
+                GameLogger.LogError(ex.Message);
             }
         }
 
 
         private void start_io_thread()
         {
-            Logger.Log(" starting io thread...");
+            GameLogger.Log(" starting io thread...");
 
             Thread thread_recv = new Thread(new ThreadStart(this.thread_callback_recv));
             thread_recv.IsBackground = true;
@@ -227,7 +227,7 @@ namespace GFW
 
         private void thread_callback_idle()
         {
-            Logger.Log(" idle thread is startup!");
+            GameLogger.Log(" idle thread is startup!");
             //Packet pack = new Packet(MsgCode.C_IDLE);
             Packet pack = new Packet(-1);//todo
             while (this.connected.Get())
@@ -248,12 +248,12 @@ namespace GFW
                     break;
                 }
             }
-            Logger.Log(" idle thread is free!");
+            GameLogger.Log(" idle thread is free!");
         }
 
         private void thread_callback_send()
         {
-            Logger.Log(" [socket] send thread is startup!");
+            GameLogger.Log(" [socket] send thread is startup!");
             while (this.connected.Get())
             {
                 Packet pack = this.chan_sent.Read<Packet>();
@@ -271,16 +271,16 @@ namespace GFW
                 catch (Exception e)
                 { //ObjectDisposedException
                    // this.disconnectAndCallback("send packet field (not connected) message code:"  + " (" + to16string(pack.Code) + ")  发出->" + MsgCode.GetInfo(pack.Code) + "|" + e.Message);
-                   Logger.LogError(e.Message);
+                   GameLogger.LogError(e.Message);
                 }
             }
-            Logger.Log(" send thread is free!");
+            GameLogger.Log(" send thread is free!");
         }
      
         private void thread_callback_recv()
         {
             Packet pack = null;
-             Logger.Log("[socket] recv thread is startup!");
+             GameLogger.Log("[socket] recv thread is startup!");
            
             while (this.connected.Get())
             {
@@ -327,7 +327,7 @@ namespace GFW
                     break;
                 }
             }  //while
-            Logger.Log("[[socket]] recv thread is free!");
+            GameLogger.Log("[[socket]] recv thread is free!");
         }
 
     }

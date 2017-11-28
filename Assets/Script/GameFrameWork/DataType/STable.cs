@@ -44,7 +44,7 @@ namespace GFW
             sTable.parent = this;
             if (childList[pos] != null)
             {
-                Logger.LogWarn("addChildAt pos had an exist STable:" + pos);
+                GameLogger.LogWarn("addChildAt pos had an exist STable:" + pos);
             }
             childList[pos] = sTable;
             DispatchEvent(DataEvent.Event_AddChild, affectSO);
@@ -55,7 +55,7 @@ namespace GFW
             STable affectSO = sTable;
             if (childList.Remove(sTable) == false)
             {
-                Logger.LogWarn("removeChild failed");
+                GameLogger.LogWarn("removeChild failed");
             }
             DispatchEvent(DataEvent.Event_RemoveChild, affectSO);
         }
@@ -67,7 +67,7 @@ namespace GFW
             {
                 if (childList[pos] == null)
                 {
-                    Logger.LogWarn("removeChildAt pos already null STable:" + pos);
+                    GameLogger.LogWarn("removeChildAt pos already null STable:" + pos);
                 }
                 else
                 {
@@ -77,7 +77,7 @@ namespace GFW
             }
             else
             {
-                Logger.LogWarn("remove child at a not exist pos:" + pos + " this: " + this.ToString());
+                GameLogger.LogWarn("remove child at a not exist pos:" + pos + " this: " + this.ToString());
             }
             DispatchEvent(DataEvent.Event_RemoveChild, affectSO);
         }

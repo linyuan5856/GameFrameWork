@@ -49,7 +49,7 @@ namespace GFW
 
             this.thread_idle = new Thread(new ThreadStart(delegate ()
             {
-                Logger.LogError("[TimeBomb]thread is startip!");
+                GameLogger.LogError("[TimeBomb]thread is startip!");
                 while (this.runState.Get())
                 {
                     long timeLeft = this.countdown_ms.AddAndGet(1000);
@@ -65,7 +65,7 @@ namespace GFW
 
                     Core.Sleep(1000);
                 }
-                Logger.LogError("[TimeBomb] thread is free!");
+                GameLogger.LogError("[TimeBomb] thread is free!");
             }));
         }
 

@@ -112,8 +112,8 @@ namespace GFW
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex.Message);
-                Logger.LogError("convert error:" + value);
+                GameLogger.LogError(ex.Message);
+                GameLogger.LogError("convert error:" + value);
             }
 
 
@@ -203,7 +203,7 @@ namespace GFW
                 }
                 else
                 {
-                   Logger.LogError(string.Format("can not find field:{0},{1}", targetType.Name, field.Name));
+                   GameLogger.LogError(string.Format("can not find field:{0},{1}", targetType.Name, field.Name));
                 }
             }
         }
@@ -311,7 +311,7 @@ namespace GFW
                         {
                             float tValue = float.Parse(value);
                             fieldInfo.SetValue(target, Mathf.RoundToInt(tValue));
-                            Logger.LogError(ex.ToString());
+                            GameLogger.LogError(ex.ToString());
                         }
                     }
                 }
@@ -333,13 +333,13 @@ namespace GFW
                 }
                 else
                 {
-                   Logger.LogError("field type not supported:" + target.GetType().ToString() + " " + fieldInfo.FieldType);
+                   GameLogger.LogError("field type not supported:" + target.GetType().ToString() + " " + fieldInfo.FieldType);
                     return false;
                 }
             }
             catch (Exception)
             {
-               Logger.LogError(string.Format("field setValue failed:{0},{1},{2},{3},", target.GetType(), fieldInfo.FieldType, fieldInfo.Name, value));
+               GameLogger.LogError(string.Format("field setValue failed:{0},{1},{2},{3},", target.GetType(), fieldInfo.FieldType, fieldInfo.Name, value));
                 return false;
             }
             return true;

@@ -37,7 +37,7 @@ namespace GFW
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError(ex.ToString());
+                        GameLogger.LogError(ex.ToString());
                     }
                 }
             }

@@ -5,37 +5,19 @@ using UnityEngine.UI;
 namespace GFW
 {
     public class UIWindow : MonoBehaviour
-    {
-        protected UIParentEnum mParentType = UIParentEnum.BaseCameraCanvas;
-        private bool mInited = false;
-
-        protected GameObject mCloseBtn;
-        public Action<UIWindow> actionOpen;
-        public Action<UIWindow> actionClose;
-
-        private UIType mUIType = UIType.none;
-
-        public UIType uiType
-        {
-            get { return mUIType; }
-            set { mUIType = value; }
-        }
-
-        public UIParentEnum parentType
-        {
-            get { return mParentType; }
-        }
-
+    {     
+        private bool _isInit;
+       
         void OnDestroy()
         {
             try
             {
-                OnUnRegistWindow();
-                OnDestoryWindow();
+                OnUnRegisterWindow();
+                OnDestroyWindow();
             }
             catch (Exception ex)
             {
-               Logger.LogError(ex.ToString());
+               GameLogger.LogError(ex.ToString());
             }
         }
 
@@ -46,18 +28,12 @@ namespace GFW
 
         public void InitWindow()
         {
-            if (mInited) return;
-            mInited = true;
-            Transform closeTrans = transform.Find("button__close");
-            if (closeTrans != null)
-            {
-                mCloseBtn = closeTrans.gameObject;
-                UGUI_EventListener.Get(mCloseBtn).onClick = OnClickClose;
-            }
-
-            OnSetParent();
+            if (_isInit) return;
+            _isInit = true;
+           
             OnInitWindow();
         }
+
         public void OpenWindow()
         {
             if (!gameObject.activeSelf)
@@ -65,23 +41,14 @@ namespace GFW
 
             transform.SetAsLastSibling();
 
-            if (actionOpen != null)
-                actionOpen(this);
-
-            OnRegistWindow();    
+            OnRegisterWindow();    
             OnOpenWindow();
         }
 
         public void CloseWindow()
-        {
-           
-            if (actionClose != null)
-                actionClose(this);
-
-            OnUnRegistWindow();
-            OnCloseWindow();
-
-            gameObject.SetActive(false);
+        {        
+            OnUnRegisterWindow();
+            OnCloseWindow();         
         }
 
 
@@ -89,34 +56,16 @@ namespace GFW
         {
         }
 
-        protected virtual void OnSetParent()
-        {
-            Transform parentTrans = null;
-            if (parentType == UIParentEnum.BaseCanvas)
-            {
-                parentTrans = UIManager.OverLayCanvas.transform;
-            }
-            else if (parentType == UIParentEnum.BaseCameraCanvas)
-            {
-                parentTrans = UIManager.CameraCanvas.transform;
-            }
-            else
-            {
-                parentTrans = UIManager.cacheUIRoot.transform;
-            }
-            gameObject.transform.SetParent(parentTrans, false);
-        }
-
         protected virtual void OnInitWindow()
         {
         }
 
-        protected virtual void OnRegistWindow()
+        protected virtual void OnRegisterWindow()
         {
 
         }
 
-        protected virtual void OnUnRegistWindow()
+        protected virtual void OnUnRegisterWindow()
         {
 
         }
@@ -130,33 +79,10 @@ namespace GFW
 
         }
 
-        protected virtual void OnDestoryWindow()
+        protected virtual void OnDestroyWindow()
         {
 
         }
 
-        protected virtual void OnClickClose(GameObject go)
-        {        
-            this.CloseWindow();           
-        }
-
     }
-
-    public enum UIParentEnum
-    {
-        BaseCanvas,
-        BaseCameraCanvas,
-        Root,
-    }
-
-    public enum UIType
-    {
-        none = 0,
-        fullScreen = 0,
-        popUP = 1,
-
-        other = 2,
-    }
-
-
 }

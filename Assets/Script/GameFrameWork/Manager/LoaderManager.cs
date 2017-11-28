@@ -25,7 +25,7 @@ namespace GFW
         Scene,
         Effect,
         LoadingBG,
-
+    
         AssetBundle,
     }
 
@@ -102,7 +102,7 @@ namespace GFW
             }
             else
             {
-                Logger.LogError(String.Format("load table {0} error", tableName));
+                GameLogger.LogError(String.Format("load table {0} error", tableName));
             }
             if (tableDict.ContainsKey(tableName))
             {
@@ -123,12 +123,40 @@ namespace GFW
                 return (T)tableDict[tableName];
             }
 
-            Logger.LogError("can not find table data:" + tableName);
+            GameLogger.LogError("can not find table data:" + tableName);
             return default(T);
         }
 
         #region 加载资源
-        T LoadAsset<T>(string name, AssetBundle bundle = null, CacheType cacheType = CacheType.Scene) where T : Object
+        string GetAssetPath(string name, AssetType assettype)
+        {
+            string path;
+            if (assettype == AssetType.UI)
+            {
+                path = GameUtil.AddString("UI/", name);
+            }
+            else
+            {
+                path = name;
+            }
+            return path;
+        }
+
+        public T LoadAsset<T>(string name, AssetType assettype)where  T:UnityEngine.Object
+        {
+            string path=GetAssetPath(name,assettype);
+            
+           return LoadAsset<T>(path);
+        }
+
+        public void LoadAssetAsync<T>(string name, AssetType assettype,object extraObject, Action<Object, object> onComplete = null)
+        {
+            string path = GetAssetPath(name, assettype);
+            LoadAssetAsync<T>(path,null,extraObject,onComplete,null);
+        }
+
+
+        T LoadAsset<T>(string name, AssetBundle bundle = null, CacheType cacheType = CacheType.Scene) where T : UnityEngine.Object
         {
             string cacheName = bundle != null ? bundle.GetInstanceID() + "+" + name : name;
             Object target = TryGetFromCache(cacheName);
@@ -137,7 +165,7 @@ namespace GFW
                 return (T)target;
             }
 
-            Logger.LogTest("LoadAsset:" + cacheName);
+            GameLogger.LogTest("LoadAsset:" + cacheName);
 
             T prefab = assetDownLoader.LoadAsset<T>(name, bundle);
 
@@ -146,7 +174,7 @@ namespace GFW
             return prefab;
         }
 
-        public void LoadAssetAsync<T>(string name, AssetBundle ab, object extraObject = null, Action<Object, object> onComplete = null,
+        void LoadAssetAsync<T>(string name, AssetBundle ab, object extraObject = null, Action<Object, object> onComplete = null,
           Action<float, object> onLoading = null,
           CacheType cacheType = CacheType.Scene)
         {
@@ -161,7 +189,7 @@ namespace GFW
                 return;
             }
 
-            Logger.LogTest("LoadAssetAsync:" + name);
+            GameLogger.LogTest("LoadAssetAsync:" + name);
             assetDownLoader.LoadAsync<T>(ab, name, extraObject, (asset, extraObj2) =>
             {
                 this.PushToCache(cacheName, asset, cacheType);
@@ -179,7 +207,7 @@ namespace GFW
 
             if (asset == null)
             {
-                Logger.LogError("LoadAsset error : can't found prefab: " + cacheName);
+                GameLogger.LogError("LoadAsset error : can't found prefab: " + cacheName);
             }
         }
 
@@ -199,7 +227,7 @@ namespace GFW
         #region 登陆游戏预加载
         public void PreLoadGameAssetBundles(Action callback)
         {
-            Logger.Log("Begin Load AssetBundles");
+            GameLogger.Log("Begin Load AssetBundles");
 
             this._afterAbLoaded = callback;
 
@@ -222,7 +250,7 @@ namespace GFW
 
         public void PreLoadGameAseets(Action callback)
         {
-            Logger.Log("Begin Load PreLoadAsset");
+            GameLogger.Log("Begin Load PreLoadAsset");
             this._afterPreAssetLoaded = callback;
             if (PreLoadAssetCatalog.AssetList.Count==0&&this._afterPreAssetLoaded!=null)
             {
@@ -243,7 +271,7 @@ namespace GFW
             assetLoadedCount++;
             if (assetLoadedCount == PreLoadAssetCatalog.AssetList.Count)
             {
-                Logger.Log("Load PreLoadAsset Done");
+                GameLogger.Log("Load PreLoadAsset Done");
                 assetLoadedCount = 0;
                 if (_afterPreAssetLoaded != null)
                 {
@@ -270,12 +298,12 @@ namespace GFW
                 {                  
                     if (abLoadedError > 0)
                     {
-                        Logger.LogError("not enough memory or storage space.");
+                        GameLogger.LogError("not enough memory or storage space.");
                         PreLoadGameAssetBundles(this._afterAbLoaded);
                     }
                     else
                     {
-                        Logger.Log("AssetBundles DownLoad Done");
+                        GameLogger.Log("AssetBundles DownLoad Done");
                         this.abDownLoader.onCompleteEvent.RemoveListener(this.OnABComplete);                      
                         if (this._afterAbLoaded != null)
                         {
@@ -315,12 +343,12 @@ namespace GFW
             }
         }
 
-        public void HttpGetText(string url, Action<string, string> callback)
+        public static void HttpGetText(string url, Action<string, string> callback)
         {
-            this.StartCoroutine(this.http_get_text(url, callback));
+            GameUtil.StartCoroutine(http_get_text(url, callback));
         }
 
-        IEnumerator http_get_text(string url, Action<string, string> callback)
+        static IEnumerator http_get_text(string url, Action<string, string> callback)
         {
             WWW www = new WWW(url);
             while (!www.isDone)
@@ -335,8 +363,9 @@ namespace GFW
             www.Dispose();
         }
 
-        void Update()
+        protected override void OnUpdate()
         {
+            base.OnUpdate();
             this.assetDownLoader.UpdateLoad();
             this.abDownLoader.UpdateLoad();
         }
@@ -494,7 +523,7 @@ namespace GFW
         private void StartDownLoadAB(ABDownloadInfo info)
         {
             string url = VersionManager.Instance.GetBundlePath(info.ABName);
-            Logger.Log("StartDownLoadAB:" + info.ABName + ":" + url);
+            GameLogger.Log("StartDownLoadAB:" + info.ABName + ":" + url);
 
             info.BeginTick = Time.realtimeSinceStartup;
 
@@ -517,7 +546,7 @@ namespace GFW
 
         private void DownLoadSuccess(ABDownloadInfo info)
         {
-            Logger.Log("download success:" + info.ABName);
+            GameLogger.Log("download success:" + info.ABName);
             try
             {
                 if (info.ExistType == WWWExistType.AlwaysExist
@@ -536,7 +565,7 @@ namespace GFW
                 }
                 catch (Exception ex)
                 {
-                    Logger.LogError("asset load callback error:" + info.ABName + " \n" + ex.ToString());
+                    GameLogger.LogError("asset load callback error:" + info.ABName + " \n" + ex.ToString());
                 }
 
                 if (info.ExistType == WWWExistType.NotExist)
@@ -560,16 +589,16 @@ namespace GFW
             {
                 info.Retry -= 1;
                 pendingDownloads.Add(info);
-                Logger.LogError("Failed to download " + info.ABName + ", " + info.www.error + " retry" + info.Retry);
+                GameLogger.LogError("Failed to download " + info.ABName + ", " + info.www.error + " retry" + info.Retry);
                 return;
             }
-            Logger.LogError("Failed to download " + info.ABName + ", " + info.www.error);
+            GameLogger.LogError("Failed to download " + info.ABName + ", " + info.www.error);
             onCompleteEvent.Invoke(info.www, EResult.Failed, info.ExtraParam);
         }
 
         private void DownLoadStop(ABDownloadInfo info)
         {
-            Logger.LogTest("Failed to download " + info.ABName + ", Stop.");
+            GameLogger.LogTest("Failed to download " + info.ABName + ", Stop.");
             info.www.Dispose();
         }
     }
@@ -646,7 +675,7 @@ namespace GFW
                             asset = ((ResourceRequest)loadInfo.AsyncOperation).asset;
 
                         if (asset == null)
-                            Logger.LogError(string.Format("asset load error {0}", loadInfo.AssetName));
+                            GameLogger.LogError(string.Format("asset load error {0}", loadInfo.AssetName));
 
                         try
                         {
@@ -654,7 +683,7 @@ namespace GFW
                         }
                         catch (Exception ex)
                         {
-                            Logger.LogError("asset load callback error:" + loadInfo.AssetName + " \n" + ex.ToString());
+                            GameLogger.LogError("asset load callback error:" + loadInfo.AssetName + " \n" + ex.ToString());
                         }
                     }
                     continue;

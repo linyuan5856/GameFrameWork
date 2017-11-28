@@ -132,7 +132,7 @@ namespace GFW
                     break;
             }
             renderTexture = RenderTexture.GetTemporary(width * 2, height * 2, 24, RenderTextureFormat.Default);
-            Logger.LogWarn("!!!!!!GetRenderTextrue  " + _type.ToString());
+            GameLogger.LogWarn("!!!!!!GetRenderTextrue  " + _type.ToString());
             return renderTexture;
         }
     }
