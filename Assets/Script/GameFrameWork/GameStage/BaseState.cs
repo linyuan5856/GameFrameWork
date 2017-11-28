@@ -2,7 +2,7 @@
 
 namespace GFW
 {
-    public class BaseStage : State
+    public class BaseState : State
     {
         protected bool mIsStageLoaded;
 

@@ -189,7 +189,7 @@ namespace GFW
             _reader.Close();
         }
 
-        public static void NewCSVToStaticClass(NewCSVFile csvFile, Type targetType)
+        public static void NewCSVToStaticClass(CSVFile csvFile, Type targetType)
         {
             FieldInfo[] fieldList = targetType.GetFields(BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Static);
 
@@ -208,22 +208,22 @@ namespace GFW
             }
         }
 
-        public static NewCSVFile ToNewCSVFile(string configStr)
+        public static CSVFile ToNewCSVFile(string configStr)
         {
             System.IO.StringReader _reader = new System.IO.StringReader(configStr);
 
-            NewCSVFile newCSVFile = ScriptableObject.CreateInstance<NewCSVFile>();
+            CSVFile csvFile = ScriptableObject.CreateInstance<CSVFile>();
 
             while (_reader.Peek() >= 0)
             {
                 string line = _reader.ReadLine();
                 line = line.Trim();
                 if (!string.IsNullOrEmpty(line))
-                    newCSVFile.dataList.Add(line);
+                    csvFile.dataList.Add(line);
             }
             _reader.Close();
 
-            return newCSVFile;
+            return csvFile;
         }
 
         public static Dictionary<string, string> ToPDict(String configStr)

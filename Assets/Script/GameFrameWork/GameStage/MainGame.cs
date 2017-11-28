@@ -33,9 +33,9 @@ namespace GFW
         void InitGameState()
         {
             stateMachine = new StateMachine();
-            stateMachine.RegisterState(new PreLoadStage());
-            stateMachine.RegisterState(new GameStage());
-            Instance.ChangeStage<PreLoadStage>();
+            stateMachine.RegisterState(new PreLoadState());
+            stateMachine.RegisterState(new GameState());
+            Instance.ChangeStage<PreLoadState>();
         }
 
 
@@ -49,9 +49,9 @@ namespace GFW
             stateMachine.ChangeState<T>(param);
         }
 
-        public BaseStage CurrentStage
+        public BaseState CurrentState
         {
-            get { return stateMachine.curState as BaseStage; }
+            get { return stateMachine.curState as BaseState; }
         }
 
         public void SetGameFrame(int frame)

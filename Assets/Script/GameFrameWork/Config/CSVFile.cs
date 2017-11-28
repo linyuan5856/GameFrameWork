@@ -5,14 +5,14 @@ using System.Collections.Generic;
 namespace GFW
 {
     [System.Serializable]
-    public class NewCSVFile : ScriptableObject
+    public class CSVFile : ScriptableObject
     {
         public List<string> dataList = new List<string>();
         public string tableName;
 
         private Dictionary<string, int> keyIndexDict = new Dictionary<string, int>();
-        private Dictionary<string, NewRow> rowDict = new Dictionary<string, NewRow>();
-        private List<NewRow> rowList = new List<NewRow>();
+        private Dictionary<string, CSVRow> rowDict = new Dictionary<string, CSVRow>();
+        private List<CSVRow> rowList = new List<CSVRow>();
 
         public void InitTable(string key)
         {
@@ -32,7 +32,7 @@ namespace GFW
             {
                 string[] valueArr = dataList[i].Split(new char[] {'^'});
 
-                NewRow row = new NewRow(valueArr, this);
+                CSVRow row = new CSVRow(valueArr, this);
 
                 string value = valueArr[keyIndex];
                 if (rowDict.ContainsKey(value))
@@ -48,23 +48,23 @@ namespace GFW
             dataList.Clear();
         }
 
-        public string GetValue(NewRow row, string key)
+        public string GetValue(CSVRow row, string key)
         {
             int index = keyIndexDict[key];
             return row.rowArr[index];
         }
 
-        public NewRow GetRowByKey(string value)
+        public CSVRow GetRowByKey(string value)
         {
             return rowDict[value];
         }
 
-        public NewRow[] GetRow(string key, string value)
+        public CSVRow[] GetRow(string key, string value)
         {
-            List<NewRow> list = new List<NewRow>();
+            List<CSVRow> list = new List<CSVRow>();
             for (int i = 0; i < rowList.Count; i++)
             {
-                NewRow row = rowList[i];
+                CSVRow row = rowList[i];
                 if (row.GetValue(key) == value)
                 {
                     list.Add(row);
@@ -78,7 +78,7 @@ namespace GFW
             return rowDict.ContainsKey(key);
         }
 
-        public Dictionary<string, NewRow> GetAllRows()
+        public Dictionary<string, CSVRow> GetAllRows()
         {
             return rowDict;
         }
@@ -91,16 +91,16 @@ namespace GFW
         }
     }
 
-    public class NewRow
+    public class CSVRow
     {
-        public NewRow(string[] arr, NewCSVFile csvFile)
+        public CSVRow(string[] arr, CSVFile csvFile)
         {
             this.rowArr = arr;
             this.csvFile = csvFile;
         }
 
         public string[] rowArr;
-        private NewCSVFile csvFile;
+        private CSVFile csvFile;
 
         public string GetValue(string key)
         {

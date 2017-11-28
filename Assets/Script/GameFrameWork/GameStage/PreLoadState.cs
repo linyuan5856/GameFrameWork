@@ -7,7 +7,7 @@ using UnityEngine.SceneManagement;
 
 namespace GFW
 {
-    public class PreLoadStage : BaseStage
+    public class PreLoadState : BaseState
     {
 
         protected override void OnInitStage()
@@ -144,14 +144,14 @@ namespace GFW
                 }
 
 
-                NewCSVFile csvFile = ConvertUtil.ToNewCSVFile(txt);
+                CSVFile csvFile = ConvertUtil.ToNewCSVFile(txt);
                 csvFile.InitTable("ID");
                 for (int ID = 1; ID <= csvFile.Count; ID++)
                 {//读表初始化服务器集合
 
                     if (!csvFile.ContainsKey(ID.ToString()))
                         continue;
-                    NewRow row = csvFile.GetRowByKey(ID.ToString());
+                    CSVRow row = csvFile.GetRowByKey(ID.ToString());
 
                     StringBuilder sb = new StringBuilder();//todo
                     for (int i = 0; i < row.rowArr.Length; i++)

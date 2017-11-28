@@ -468,16 +468,16 @@ namespace GFW
                 outputPath = Path_GenerateExcel + "/" + tableName + ".asset";
             }
 
-            NewCSVFile newCSVFile = AssetDatabase.LoadAssetAtPath<NewCSVFile>(outputPath);
+            CSVFile csvFile = AssetDatabase.LoadAssetAtPath<CSVFile>(outputPath);
 
-            if (newCSVFile == null)
+            if (csvFile == null)
             {
-                newCSVFile = new NewCSVFile();
-                AssetDatabase.CreateAsset(newCSVFile, outputPath);
+                csvFile = new CSVFile();
+                AssetDatabase.CreateAsset(csvFile, outputPath);
             }
-            newCSVFile.Clear();
+            csvFile.Clear();
 
-            newCSVFile.tableName = tableName;
+            csvFile.tableName = tableName;
 
             Dictionary<int, string> fieldDict = new Dictionary<int, string>();
             for (int i = 0; i < excelReader.FieldCount; i++)
@@ -511,7 +511,7 @@ namespace GFW
                     retField += "^";
                 retField += pair.Value;
             }
-            newCSVFile.dataList.Add(retField);
+            csvFile.dataList.Add(retField);
             /////
             while (excelReader.Read())
             {
@@ -525,11 +525,11 @@ namespace GFW
                         ret += "^";
                     ret += value;
                 }
-                newCSVFile.dataList.Add(ret);
+                csvFile.dataList.Add(ret);
             }
             //} while (excelReader.NextResult());
             //Debug.Log(path + " Complete!");
-            EditorUtility.SetDirty(newCSVFile);
+            EditorUtility.SetDirty(csvFile);
             AssetDatabase.SaveAssets();
         }
 

@@ -96,9 +96,9 @@ namespace GFW
             {
                 ((ITable)asset).InitTable();
             }
-            else if (asset is NewCSVFile)
+            else if (asset is CSVFile)
             {
-                ((NewCSVFile)asset).InitTable(key);
+                ((CSVFile)asset).InitTable(key);
             }
             else
             {

@@ -5,7 +5,7 @@ using UnityEngine.SceneManagement;
 
 namespace GFW
 {
-    public class GameStage : BaseStage
+    public class GameState : BaseState
     {
         private string sceneName;           
 
