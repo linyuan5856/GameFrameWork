@@ -13,7 +13,7 @@ namespace GFW
         [SerializeField]
         protected string mTcpName;
 
-        static AtomicLong log_index = new AtomicLong(0);
+       // static AtomicLong log_index = new AtomicLong(0);
         // private string clientId;
         //private string deviceModel;
         // private string screenSize;
