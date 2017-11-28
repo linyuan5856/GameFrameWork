@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEditor;
-using System.Collections;
 
 public class SceneInfo : EditorWindow {
 	private Bounds bounds;
@@ -11,7 +10,8 @@ public class SceneInfo : EditorWindow {
 		EditorWindow.GetWindow(typeof(SceneInfo));
 	}
 	
-	void OnGUI_2() {
+	void OnGUI() {
+        GUILayout.Label(new GUIContent("Calculate Render Bound"));
 		if (GUILayout.Button("Calculate")) {
 			GetSceneInfo();
 		}

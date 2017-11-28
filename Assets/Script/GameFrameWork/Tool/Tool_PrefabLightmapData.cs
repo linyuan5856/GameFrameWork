@@ -116,7 +116,7 @@ namespace GFW
         }
 
 #if UNITY_EDITOR
-        [MenuItem("Assets/Update Scene with Prefab Lightmaps")]
+        [MenuItem("program/LightMap/Update Scene with Prefab Lightmaps")]
         static void UpdateLightmaps()
         {
             Tool_PrefabLightmapData[] prefabs = FindObjectsOfType<Tool_PrefabLightmapData>();
@@ -129,7 +129,7 @@ namespace GFW
             Debug.Log("Prefab lightmaps updated");
         }
 
-        [MenuItem("HeiMiao/Bake Prefab")]
+        [MenuItem("program/LightMap/Bake Prefab")]
         public static void GenerateLightmapInfo()
         {
             Debug.ClearDeveloperConsole();

@@ -2,7 +2,7 @@ using UnityEditor;
 
 public class LightmapSize_256 : EditorWindow
 {
-    [MenuItem("program/LightmapSize/LightmapSize_256")]
+    [MenuItem("program/LightMap/LightmapSize_256")]
 	static void Init()
 	{
 		LightmapEditorSettings.maxAtlasHeight = 256;
@@ -12,7 +12,7 @@ public class LightmapSize_256 : EditorWindow
 
 public class LightmapSize_512 : EditorWindow
 {
-    [MenuItem("program/LightmapSize/LightmapSize_512")]
+    [MenuItem("program/LightMap/LightmapSize_512")]
 	static void Init()
 	{
 		LightmapEditorSettings.maxAtlasHeight = 512;
@@ -22,7 +22,7 @@ public class LightmapSize_512 : EditorWindow
 
 public class LightmapSize_1024 : EditorWindow
 {
-    [MenuItem("program/LightmapSize/LightmapSize_1024")]
+    [MenuItem("program/LightMap/LightmapSize_1024")]
 	static void Init()
 	{
 		LightmapEditorSettings.maxAtlasHeight = 1024;
@@ -32,7 +32,7 @@ public class LightmapSize_1024 : EditorWindow
 
 public class LightmapSize_2048 : EditorWindow
 {
-    [MenuItem("program/LightmapSize/LightmapSize_2048")]
+    [MenuItem("program/LightMap/LightmapSize_2048")]
 	static void Init()
 	{
 		LightmapEditorSettings.maxAtlasHeight = 2048;
@@ -42,7 +42,7 @@ public class LightmapSize_2048 : EditorWindow
 
 public class LightmapSize_4096 : EditorWindow
 {
-    [MenuItem("program/LightmapSize/LightmapSize_4096")]
+    [MenuItem("program/LightMap/LightmapSize_4096")]
 	static void Init()
 	{
 		LightmapEditorSettings.maxAtlasHeight = 4096;
