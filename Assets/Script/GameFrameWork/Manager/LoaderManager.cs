@@ -25,7 +25,7 @@ namespace GFW
         Music,
         Table,
         Scene,
-        Effect,     
+        Effect,
         AssetBundle,
     }
     [Serializable]
@@ -48,13 +48,13 @@ namespace GFW
             _abKey.Clear();
             _abValue.Clear();
 
-            foreach (var asset in assetCacheDict)
+            foreach (var asset in _assetCacheDict)
             {
                 this._assetkey.Add(asset.Key);
                 this._assetvalue.Add(asset.Value);
             }
 
-            foreach (var ab in bundleDict)
+            foreach (var ab in _abDict)
             {
                 this._abKey.Add(ab.Key);
                 this._abValue.Add(ab.Value);
@@ -63,17 +63,17 @@ namespace GFW
 
         public void OnAfterDeserialize()
         {
-            this.assetCacheDict.Clear();
-            this.bundleDict.Clear();
+            this._assetCacheDict.Clear();
+            this._abDict.Clear();
 
             for (int i = 0; i < this._assetkey.Count; i++)
             {
-                this.assetCacheDict[this._assetkey[i]] = this._assetvalue[i];
+                this._assetCacheDict[this._assetkey[i]] = this._assetvalue[i];
             }
 
             for (int i = 0; i < this._abKey.Count; i++)
             {
-                this.bundleDict[this._abKey[i]]=this._abValue[i];
+                this._abDict[this._abKey[i]] = this._abValue[i];
             }
 
         }
@@ -100,23 +100,23 @@ namespace GFW
         private readonly AssetBundleDownLoader abDownLoader = new AssetBundleDownLoader();
 
 
-        private Dictionary<string, CacheAssetInfo> assetCacheDict = new Dictionary<string, CacheAssetInfo>();
-        private Dictionary<string, Object> tableDict = new Dictionary<string, Object>();
-        private Dictionary<string, AssetBundle> bundleDict = new Dictionary<string, AssetBundle>();
+        private Dictionary<string, CacheAssetInfo> _assetCacheDict = new Dictionary<string, CacheAssetInfo>();
+        private Dictionary<string, Object> _tableDict = new Dictionary<string, Object>();
+        private Dictionary<string, AssetBundle> _abDict = new Dictionary<string, AssetBundle>();
 
         private int abLoadedCount = 0;
         private int abLoadedError = 0;
         private Action _afterAbLoaded;
-       
+
         private int assetLoadedCount = 0;
         private Action _afterPreAssetLoaded;
 
         #region 加载 读取 Table
         public Object LoadTable(string tableName, AssetBundle ab = null, string key = "ID")
         {
-            if (tableDict.ContainsKey(tableName) && tableDict[tableName] != null)
+            if (_tableDict.ContainsKey(tableName) && _tableDict[tableName] != null)
             {
-                return tableDict[tableName];
+                return _tableDict[tableName];
             }
             ScriptableObject asset = null;
 
@@ -142,13 +142,13 @@ namespace GFW
             {
                 GameLogger.LogError(String.Format("load table {0} error", tableName));
             }
-            if (tableDict.ContainsKey(tableName))
+            if (_tableDict.ContainsKey(tableName))
             {
-                tableDict[tableName] = asset;
+                _tableDict[tableName] = asset;
             }
             else
             {
-                tableDict.Add(tableName, asset);
+                _tableDict.Add(tableName, asset);
             }
             return asset;
         }
@@ -156,9 +156,9 @@ namespace GFW
         public T GetTable<T>() where T : Object
         {
             string tableName = typeof(T).ToString();
-            if (tableDict.ContainsKey(tableName))
+            if (_tableDict.ContainsKey(tableName))
             {
-                return (T)tableDict[tableName];
+                return (T)_tableDict[tableName];
             }
 
             GameLogger.LogError("can not find table data:" + tableName);
@@ -209,7 +209,7 @@ namespace GFW
             T prefab = assetDownLoader.LoadAsset<T>(name, bundle);
 
             this.PushToCache(cacheName, prefab, cacheType);
-            
+
             return prefab;
         }
 
@@ -242,7 +242,7 @@ namespace GFW
         void PushToCache(string cacheName, Object asset, CacheType cacheType)
         {
             if (asset != null && cacheType != CacheType.NotCache)
-                assetCacheDict[cacheName] = new CacheAssetInfo(cacheName, asset, cacheType);
+                _assetCacheDict[cacheName] = new CacheAssetInfo(cacheName, asset, cacheType);
 
             if (asset == null)
             {
@@ -252,9 +252,9 @@ namespace GFW
 
         Object TryGetFromCache(string name)
         {
-            if (assetCacheDict.ContainsKey(name))
+            if (_assetCacheDict.ContainsKey(name))
             {
-                CacheAssetInfo cacheAssetInfo = assetCacheDict[name];
+                CacheAssetInfo cacheAssetInfo = _assetCacheDict[name];
                 cacheAssetInfo.lastUseTime = Time.time;
                 return cacheAssetInfo.asset;
             }
@@ -269,7 +269,7 @@ namespace GFW
             GameLogger.Log("Begin Load AssetBundles");
 
             this._afterAbLoaded = onComplete;
-           
+
 #if UNITY_EDITOR
             if (GameConfigPVO.Instance.EditorUseBundleConfig)
             {
@@ -284,11 +284,11 @@ namespace GFW
             this.abDownLoader.onLoadEvent.AddListener(this.OnLoadingAb);
             foreach (PreLoadSourceInfo si in PreLoadAssetCatalog.AssetBundleList)
             {
-                abDownLoader.DownLoadAB(si.AssetName, AssetBundleDownLoader.WWWExistType.AlwaysExist, si);
+                abDownLoader.DownLoadAB(si.AssetName, si);
             }
         }
 
-        public void PreLoadGameAseets(Action callback)
+        public void PreLoadGameAssets(Action callback)
         {
             GameLogger.Log("Begin Load PreLoadAsset");
             this._afterPreAssetLoaded = callback;
@@ -321,7 +321,7 @@ namespace GFW
             }
         }
 
-        private void OnABComplete(WWW www, AssetBundleDownLoader.EResult result, System.Object _param)
+        private void OnABComplete(AssetBundle ab, AssetBundleDownLoader.EResult result, System.Object _param)
         {
             abLoadedCount++;
             PreLoadSourceInfo preLoadSourceInfo = (PreLoadSourceInfo)_param;
@@ -331,7 +331,7 @@ namespace GFW
             {
                 //if (!this.bundleDict.ContainsKey(preLoadSourceInfo.AssetName))
                 //{
-                this.bundleDict[preLoadSourceInfo.AssetName] = www.assetBundle;
+                this._abDict[preLoadSourceInfo.AssetName] = ab;
                 //}
 
                 if (abLoadedCount == PreLoadAssetCatalog.AssetBundleList.Count)
@@ -360,11 +360,11 @@ namespace GFW
             }
         }
 
-        private void OnLoadingAb(float progress,System.Object extraParam)
+        private void OnLoadingAb(float progress, System.Object extraParam)
         {
-          //  PreLoadSourceInfo info = (PreLoadSourceInfo)extraParam;
+            //  PreLoadSourceInfo info = (PreLoadSourceInfo)extraParam;
 
-           // UnityEngine.Debug.LogError(string.Format("Load Bundle Name--<{0}  ... Progress --> {1}",info.AssetName,progress));
+            // UnityEngine.Debug.LogError(string.Format("Load Bundle Name--<{0}  ... Progress --> {1}",info.AssetName,progress));
         }
         #endregion
 
@@ -383,7 +383,7 @@ namespace GFW
 
         IEnumerator LoadScene()
         {
-            GameLogger.LogWarn(string.Format("Load Scene --> {0}",_loadSceneName));
+            GameLogger.LogWarn(string.Format("Load Scene --> {0}", _loadSceneName));
 
             AsyncOperation ao = SceneManager.LoadSceneAsync(_loadSceneName);
             if (ao != null)
@@ -402,7 +402,7 @@ namespace GFW
 
                 GameLogger.LogWarn(string.Format("Scene --> {0} is Loaded", _loadSceneName));
 
-                if (_loadSceneComplete!=null)
+                if (_loadSceneComplete != null)
                 {
                     _loadSceneComplete();
                 }
@@ -415,25 +415,29 @@ namespace GFW
 
         #endregion
 
+        bool HasLoadedAb(string abName)
+        {
+            return this._abDict.ContainsKey(abName);
+        }     
 
         public void ClearCache(string name, AssetBundle assetBundle)
         {
             string cacheName = assetBundle != null ? assetBundle.name + "+" + name : name;
-            if (assetCacheDict.ContainsKey(cacheName))
+            if (_assetCacheDict.ContainsKey(cacheName))
             {
-                assetCacheDict.Remove(cacheName);
+                _assetCacheDict.Remove(cacheName);
             }
         }
 
         public void ClearCache(CacheType cacheType)
         {
-            CacheAssetInfo[] cacheAssetArr = assetCacheDict.Values.ToArray();
+            CacheAssetInfo[] cacheAssetArr = _assetCacheDict.Values.ToArray();
             int assetCount = cacheAssetArr.Length;
             for (int i = 0; i < assetCount; i++)
             {
                 if (cacheAssetArr[i].cacheType == cacheType)
                 {
-                    assetCacheDict.Remove(cacheAssetArr[i].pathName);
+                    _assetCacheDict.Remove(cacheAssetArr[i].pathName);
                 }
             }
         }
@@ -470,19 +474,6 @@ namespace GFW
 
     public sealed class AssetBundleDownLoader
     {
-        private class WWWExist
-        {
-            public WWWExistType ExistType;
-            public WWW www;
-        }
-
-        public enum WWWExistType
-        {
-            NotExist,
-            AlwaysExist,
-            ExistTime,
-        }
-
         public enum EResult
         {
             Unknown = -1,
@@ -501,12 +492,10 @@ namespace GFW
             public int Version;
             public bool Stop;
             public System.Object ExtraParam;
-            public WWWExistType ExistType = WWWExistType.NotExist;
 
-            public ABDownloadInfo(string abName, WWWExistType existType, System.Object extraParam)
+            public ABDownloadInfo(string abName, System.Object extraParam)
             {
                 ABName = abName;
-                ExistType = existType;
                 ExtraParam = extraParam;
             }
         }
@@ -515,10 +504,9 @@ namespace GFW
 
         private List<ABDownloadInfo> processingDownloads = new List<ABDownloadInfo>();
         private List<ABDownloadInfo> pendingDownloads = new List<ABDownloadInfo>();
-        private Dictionary<string, WWWExist> abCache = new Dictionary<string, WWWExist>();
 
         public class OnLoadEvent : UnityEvent<float, System.Object> { }
-        public class OnCompleteEvent : UnityEvent<WWW, EResult, System.Object> { }
+        public class OnCompleteEvent : UnityEvent<AssetBundle, EResult, System.Object> { }
 
         public readonly OnLoadEvent onLoadEvent = new OnLoadEvent();
         public readonly OnCompleteEvent onCompleteEvent = new OnCompleteEvent();
@@ -564,26 +552,13 @@ namespace GFW
             }
         }
 
-        public void DownLoadAB(string shortURL, WWWExistType existType = WWWExistType.NotExist, System.Object extraObj = null)
+        public void DownLoadAB(string abName, System.Object extraObj = null)
         {
-            WWWExist wwwExist;
-            if (abCache.TryGetValue(shortURL, out wwwExist))
-            {
-                onCompleteEvent.Invoke(wwwExist.www, EResult.Success, extraObj);
-                return;
-            }
-            ABDownloadInfo info = processingDownloads.Find(a => a.ABName == shortURL) ?? pendingDownloads.Find(a => a.ABName == shortURL);
+            ABDownloadInfo info = processingDownloads.Find(a => a.ABName == abName) ?? pendingDownloads.Find(a => a.ABName == abName);
 
-            if (info != null)
+            if (info == null)
             {
-                if (info.www != null)
-                {
-                    info.www.threadPriority = ThreadPriority.Normal;
-                }
-            }
-            else
-            {
-                info = new ABDownloadInfo(shortURL, existType, extraObj);
+                info = new ABDownloadInfo(abName, extraObj);
                 if (processingDownloads.Count < MAXCOUNT)
                 {
                     processingDownloads.Add(info);
@@ -596,26 +571,6 @@ namespace GFW
             }
         }
 
-        public void UnloadCache(string path)
-        {
-            WWWExist wwwExist = null;
-            if (abCache.TryGetValue(path, out wwwExist))
-            {
-                wwwExist.www.assetBundle.Unload(false);
-                wwwExist.www.Dispose();
-                abCache.Remove(path);
-            }
-        }
-
-        public AssetBundle GetAssetBundle(string _path)
-        {
-            WWWExist wwwExist = null;
-            if (abCache.TryGetValue(_path, out wwwExist))
-            {
-                return wwwExist.www.assetBundle;
-            }
-            return null;
-        }
 
         private void StartDownLoadAB(ABDownloadInfo info)
         {
@@ -628,10 +583,10 @@ namespace GFW
             {
                 info.www.Dispose();
             }
-          
-          
+
+
             info.www = WWW.LoadFromCacheOrDownload(url, info.Version);
-          
+
             if (info.www == null)
             {
                 info.www = new WWW(url);
@@ -647,33 +602,10 @@ namespace GFW
             GameLogger.Log("download success:" + info.ABName);
             try
             {
-                if (info.ExistType == WWWExistType.AlwaysExist
-                    || info.ExistType == WWWExistType.ExistTime)
-                {
-                    WWWExist wwwExist = new WWWExist();
-                    wwwExist.ExistType = info.ExistType;
-                    wwwExist.www = info.www;
-                    abCache[info.ABName] = wwwExist;
-                }
+                if (onCompleteEvent != null)
+                    onCompleteEvent.Invoke(info.www.assetBundle, EResult.Success, info.ExtraParam);
 
-                try
-                {
-                    if (onCompleteEvent != null)
-                        onCompleteEvent.Invoke(info.www, EResult.Success, info.ExtraParam);
-                }
-                catch (Exception ex)
-                {
-                    GameLogger.LogError("asset load callback error:" + info.ABName + " \n" + ex.ToString());
-                }
-
-                if (info.ExistType == WWWExistType.NotExist)
-                {
-                    if (info.www.assetBundle != null)
-                    {
-                        info.www.assetBundle.Unload(false);
-                    }
-                    info.www.Dispose();
-                }
+                info.www.Dispose();
             }
             catch (System.Exception ex)
             {
@@ -691,7 +623,7 @@ namespace GFW
                 return;
             }
             GameLogger.LogError("Failed to download " + info.ABName + ", " + info.www.error);
-            onCompleteEvent.Invoke(info.www, EResult.Failed, info.ExtraParam);
+            onCompleteEvent.Invoke(null, EResult.Failed, info.ExtraParam);
         }
 
         private void DownLoadStop(ABDownloadInfo info)

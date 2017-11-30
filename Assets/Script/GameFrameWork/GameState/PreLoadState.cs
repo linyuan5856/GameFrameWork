@@ -46,7 +46,7 @@ namespace GFW
 
             MsgManager.Instance.Regist();
 
-            GameLogger.Log("GameManager  Init OK");
+            GameLogger.Log("Extra Manager  Init OK");
         }
 
         void InitVersion()
@@ -64,14 +64,13 @@ namespace GFW
                     GameLogger.LogError("LoadLocalVersion Error:" + error);
                 }
                 else
-                {
-                    GameLogger.LogTest("LocalVersion:" + text);
+                {                
                     VersionManager.Instance.SetLocalVersion(text);
                     this.LoadServerVersion();
+                    GameLogger.Log(string.Format("LocalVersion:-->{0} \n Bundle Path:-->{1}", VersionManager.Instance.LocalVersion, GameConfigPVO.Instance.getCDNBundleUrl()));          
                 }
             });
 
-            GameLogger.Log("Bundle Path:" + GameConfigPVO.Instance.getCDNBundleUrl());
         }
 
         void LoadServerVersion()
@@ -88,7 +87,7 @@ namespace GFW
                     return;
                 }
 
-                GameLogger.LogTest("SeverVersion:" + text);
+                GameLogger.Log(string.Format("SeverVersion:-->{0} ",VersionManager.Instance.SeverVersion));
 
                 VersionManager.Instance.SetServerVersion(text);
 
@@ -174,7 +173,7 @@ namespace GFW
 
         void StartLoadAsset()
         {
-            LoaderManager.Instance.PreLoadGameAseets(BeginGame);
+            LoaderManager.Instance.PreLoadGameAssets(BeginGame);
         }
 
         void BeginGame()

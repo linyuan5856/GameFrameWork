@@ -63,11 +63,6 @@ namespace GFW
             stateMachine.ChangeState<T>(param);
         }
 
-        public BaseState CurrentState
-        {
-            get { return stateMachine.curState as BaseState; }
-        }
-
         public void SetGameFrame(int frame)
         {
             if (_gameFrame == frame) return;
