@@ -14,28 +14,9 @@ namespace GFW
         {
             base.OnInitStage();
 
-            GameUtil.StartCoroutine(LoadScene());
-
+            LoaderManager.Instance.LoadSceneAsync(GameDefine.PreLoadScene,null,this.LoadGameConfig);         
         }
-
-        protected override void OnLeaveStage()
-        {
-            base.OnLeaveStage();
-
-            GameLogger.Log("Game PreLoad Is Done");
-        }
-
-
-        IEnumerator LoadScene()
-        {
-            AsyncOperation ao = SceneManager.LoadSceneAsync(GameDefine.PreLoadScene);
-            if (ao != null)
-            {
-                yield return ao.isDone;
-                this.LoadGameConfig();
-            }
-        }
-
+    
         void LoadGameConfig()
         {
             string configPath = GameConfigPVO.Instance.GetGameConfigPath();
@@ -49,21 +30,15 @@ namespace GFW
                  ConvertUtil.ToPVO(text, GameConfigPVO.Instance);
                  GameLogger.logLevel = GameConfigPVO.Instance.logLevel;
                  GameLogger.Log("Load GameConfig OK --> CDN Path:" + GameConfigPVO.Instance.cdnUrl);
-                 InitGameManager();
+                 InitExtraGameManager();
                  InitVersion();
              });
         }
 
-        void InitGameManager()
-        {
+        void InitExtraGameManager()
+        {      
             GameObject mainGo = MainGame.Instance.gameObject;
-            GameUtil.AddComponentToP<LoaderManager>(mainGo);
-            GameUtil.AddComponentToP<AudioManager>(mainGo);
-            GameUtil.AddComponentToP<TcpManager>(mainGo);
-            GameUtil.AddComponentToP<ChatTcpManager>(mainGo);
-            GameUtil.AddComponentToP<TimerManager>(mainGo);
-            GameUtil.AddComponentToP<UIManager>(mainGo);
-           
+
             if (GameConfigPVO.Instance.useRemoteLog)
                 GameUtil.AddComponentToP<LogTcpManager>(mainGo);
             if (GameConfigPVO.Instance.usePerformance)

@@ -13,6 +13,7 @@ namespace GFW
         {
             base.Init();
             this.InitGameSetting();
+            this.InitGameManager();
             this.InitGameState();
         }
 
@@ -31,11 +32,23 @@ namespace GFW
 
         }
 
+        void InitGameManager()
+        {
+            GameObject mainGo = MainGame.Instance.gameObject;
+            GameUtil.AddComponentToP<LoaderManager>(mainGo);
+            GameUtil.AddComponentToP<AudioManager>(mainGo);
+            GameUtil.AddComponentToP<TcpManager>(mainGo);
+            GameUtil.AddComponentToP<ChatTcpManager>(mainGo);
+            GameUtil.AddComponentToP<TimerManager>(mainGo);
+            GameUtil.AddComponentToP<UIManager>(mainGo);
+        }
+
         void InitGameState()
         {
             stateMachine = new StateMachine();
             stateMachine.RegisterState(new PreLoadState());
             stateMachine.RegisterState(new GameState());
+            stateMachine.RegisterState(new TestState());
             Instance.ChangeState<PreLoadState>();
         }
 

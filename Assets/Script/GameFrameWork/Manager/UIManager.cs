@@ -16,10 +16,17 @@ namespace GFW
 
         private GameObject _uiRoot;
 
-        protected override void Init()
+        private GameObject UiRoot
         {
-            base.Init();
-            _uiRoot = new GameObject("UiRoot");
+            get
+            {
+                if (_uiRoot == null)
+                {
+                    _uiRoot = new GameObject("UiRoot");
+
+                }
+                return _uiRoot;
+            }
         }
 
         private UIManager()
@@ -101,7 +108,7 @@ namespace GFW
                 if (asset != null)
                 {
                     var canvasAsset = LoaderManager.Instance.LoadAsset<GameObject>(GameDefine.UI_Canvas, AssetType.UI);
-                    var canvas = (GameObject)UnityEngine.Object.Instantiate(canvasAsset, _uiRoot.transform);
+                    var canvas = (GameObject)UnityEngine.Object.Instantiate(canvasAsset, UiRoot.transform);
 
                     var controller = canvas.GetComponent<UICanvasController>();
                     this._cacheCanvasDict[uiName] = controller;
@@ -139,7 +146,7 @@ namespace GFW
         {
             window.CloseWindow();
             string uiname = window.name;
-            SetCanvas(uiname,false);
+            SetCanvas(uiname, false);
             _openedUiDict.Remove(uiname);
         }
 
@@ -162,7 +169,7 @@ namespace GFW
             }
             else
             {
-                 GameLogger.LogError(string.Format("UI {0} 's Canvas Miss",name));
+                GameLogger.LogError(string.Format("UI {0} 's Canvas Miss", name));
             }
         }
 

@@ -16,6 +16,7 @@ namespace GFW
         public const string Path_GenerateExcel = "Assets/Script/GameFrameWork/Config/CSVScriptObject";
         public const string Path_EditorConfig = "Assets\\Script\\GameFrameWork\\Config\\EditorConfig.asset";
 
+        #region path
         [NonSerialized]
         static List<TableConfig> tableList = new List<TableConfig>()
         {
@@ -117,22 +118,23 @@ namespace GFW
         //new TableConfig("Welfare_FianceCTable","Welfare_FianceCVO","\\Activity\\FiancePlan.xlsx"),
         //new TableConfig("Welfare_ConsumeCTable","Welfare_ConsumeCVO","\\Activity\\TotalConsume.xlsx")
         };
+        #endregion
 
         static CSVPathEditor _csvPathEditor;
 
         static CSVPathEditor CsvPathEditor
         {
             get
-            { 
+            {
                 GenerateCsvPathEditor();
                 return _csvPathEditor;
-            }         
+            }
         }
 
         [MenuItem("program/Config/GenerateCSVPath", false, 101)]
         private static void GenerateCsvPathEditor()
         {
-            if (_csvPathEditor!=null)
+            if (_csvPathEditor != null)
             {
                 return;
             }
@@ -145,9 +147,227 @@ namespace GFW
             }
             Selection.activeObject = CsvPathEditor;
         }
-        
+   
+        [MenuItem("program/Config/ConvertOneTable", false, 102)]
+        private static void ConvertOneTable()
+        {
+            if (!Directory.Exists(Path_GenerateExcel))
+                Directory.CreateDirectory(Path_GenerateExcel);
+
+            string path = EditorUtility.OpenFilePanel("Select Excel", CsvPathEditor.Path_ExcelInputDir, "xlsx");
+            path = path.Replace("\\", "/");
+            if (string.IsNullOrEmpty(path)) return;
+            TableConfig tableConfig = null;
+            for (int i = 0; i < tableList.Count; i++)
+            {
+                string shortPath = tableList[i].shortPath;
+                shortPath = shortPath.Replace("\\", "/");
+
+                if (path.IndexOf(shortPath) > -1)
+                {
+                    tableConfig = tableList[i];
+                    break;
+                }
+            }
+            if (tableConfig != null)
+            {
+                if (!string.IsNullOrEmpty(tableConfig.rowClassName))
+                {
+                    BuildOneTable(tableConfig.tableClassName, tableConfig.rowClassName, path);
+                }
+                else
+                {
+                    BuildStaticCsvClass(tableConfig.tableClassName, path);
+                }
+            }
+            else
+            {
+                GameLogger.LogError("cannot find table config");
+            }
+            EditorUtility.ClearProgressBar();
+            GameLogger.Log("Convert Complete!");
+        }
+
+        private static void BuildOneTable(string tableTypeName, string rowTypeName, string path)
+        {
+            Assembly amb = System.AppDomain.CurrentDomain.Load("Assembly-CSharp");
+            Type tableType = amb.GetType(tableTypeName);
+            Type rowType = amb.GetType(rowTypeName);
+
+            if (tableType == null || rowType == null)
+            {
+                GameLogger.LogError(string.Format("table type not find :{0}", tableTypeName));
+                return;
+            }
+
+            EditorUtility.DisplayProgressBar("ConvertTable", path, UnityEngine.Random.value);
+
+            FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read);
+            IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+
+            excelReader.Read();
+
+            string outputPath = Path_GenerateExcel + "/" + tableTypeName + ".asset";
+
+            ITable newHeroTable = AssetDatabase.LoadAssetAtPath<ITable>(outputPath);
+            if (newHeroTable == null)
+            {
+                newHeroTable = (ITable)Activator.CreateInstance(tableType);
+                AssetDatabase.CreateAsset(newHeroTable, outputPath);
+            }
+            newHeroTable.Clear();
+
+            Dictionary<int, string> fieldDict = new Dictionary<int, string>();
+            Dictionary<int, FieldInfo> fieldInfoList = new Dictionary<int, FieldInfo>();
+
+            for (int i = 0; i < excelReader.FieldCount; i++)
+            {
+                if (!excelReader.IsDBNull(i))
+                {
+                    string fieldName = excelReader.GetString(i);
+
+                    FieldInfo fieldInfo = rowType.GetField(fieldName,
+                        BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+                    if (fieldInfo != null)
+                    {
+                        fieldDict.Add(i, fieldName);
+                        fieldInfoList.Add(i, fieldInfo);
+                    }
+                }
+            }
+
+            excelReader.Read();
+            excelReader.Read();
+            excelReader.Read();
+            for (int i = 0; i < excelReader.FieldCount; i++)
+            {
+                if (!excelReader.IsDBNull(i))
+                {
+                    string ABC = excelReader.GetString(i);
+                    if (ABC != "A" && ABC != "C")
+                    {
+                        fieldDict.Remove(i);
+                        fieldInfoList.Remove(i);
+                    }
+                }
+            }
+
+            int rowCount = 5;
+            while (excelReader.Read())
+            {
+                if (!excelReader.IsDBNull(0) && !string.IsNullOrEmpty(excelReader.GetString(0)))
+                {
+                    IRow rowCVO = (IRow)Activator.CreateInstance(rowType);
+                    foreach (var pair in fieldDict)
+                    {
+                        int index = pair.Key;
+
+                        string value = excelReader.IsDBNull(index) ? "" : excelReader.GetString(index);
+                        if (!ConvertUtil.SetFieldValue(fieldInfoList[index], rowCVO, value))
+                        {
+                            GameLogger.LogError(tableTypeName + " row:" + rowCount);
+                        }
+                    }
+                    newHeroTable.AddRow(rowCVO);
+                }
+                else
+                {
+                    GameLogger.LogError(string.Format("rowRead Error：{0} {1}", tableTypeName, excelReader.GetString(1)));
+                }
+                rowCount++;
+            }
+
+            EditorUtility.SetDirty(newHeroTable);
+            AssetDatabase.SaveAssets();
+        }
+
+        private static void BuildStaticCsvClass(string tableName, string path)
+        {
+            EditorUtility.DisplayProgressBar("ConvertTable", path, UnityEngine.Random.value);
+
+            FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read);
+            IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+            //do  //只读第一个sheet
+            //{
+            excelReader.Read();
+
+            string outputPath = Path_GenerateExcel + "/" + tableName + ".asset";
+            if (path.IndexOf("LanguageLocal.xlsx") > -1)
+            {
+                outputPath = "Assets/Resources/" + tableName + ".asset";
+            }
+            else
+            {
+                outputPath = Path_GenerateExcel + "/" + tableName + ".asset";
+            }
+
+            CSVFile csvFile = AssetDatabase.LoadAssetAtPath<CSVFile>(outputPath);
+
+            if (csvFile == null)
+            {
+                csvFile = new CSVFile();
+                AssetDatabase.CreateAsset(csvFile, outputPath);
+            }
+            csvFile.Clear();
+
+            csvFile.tableName = tableName;
+
+            Dictionary<int, string> fieldDict = new Dictionary<int, string>();
+            for (int i = 0; i < excelReader.FieldCount; i++)
+            {
+                if (!excelReader.IsDBNull(i))
+                {
+                    string fieldName = excelReader.GetString(i);
+                    fieldDict.Add(i, fieldName);
+                }
+            }
+
+            excelReader.Read();
+            excelReader.Read();
+            excelReader.Read();
+            for (int i = 0; i < excelReader.FieldCount; i++)
+            {
+                if (!excelReader.IsDBNull(i))
+                {
+                    string ABC = excelReader.GetString(i);
+                    if (ABC != "A" && ABC != "C")
+                    {
+                        fieldDict.Remove(i);
+                    }
+                }
+            }
+            /////
+            string retField = string.Empty;
+            foreach (var pair in fieldDict)
+            {
+                if (!string.IsNullOrEmpty(retField))
+                    retField += "^";
+                retField += pair.Value;
+            }
+            csvFile.dataList.Add(retField);
+            /////
+            while (excelReader.Read())
+            {
+                string ret = string.Empty;
+                foreach (var pair in fieldDict)
+                {
+                    int index = pair.Key;
+                    string value = excelReader.IsDBNull(index) ? "" : excelReader.GetString(index);
+
+                    if (!string.IsNullOrEmpty(ret))
+                        ret += "^";
+                    ret += value;
+                }
+                csvFile.dataList.Add(ret);
+            }
+            //} while (excelReader.NextResult());
+            //Debug.Log(path + " Complete!");
+            EditorUtility.SetDirty(csvFile);
+            AssetDatabase.SaveAssets();
+        }
+
         [MenuItem("program/Config/ConvertAllTable", false, 103)]
-        private static void BuildAllTable()
+        private static void ConvertAllTable()
         {
             if (!Directory.Exists(Path_GenerateExcel))
                 Directory.CreateDirectory(Path_GenerateExcel);
@@ -156,7 +376,7 @@ namespace GFW
             TableConfig tableConfig = null;
             for (int i = 0; i < tableList.Count; i++)
             {
-                tableConfig =tableList[i];
+                tableConfig = tableList[i];
                 if (!string.IsNullOrEmpty(tableConfig.rowClassName))
                 {
                     BuildOneTable(tableConfig.tableClassName, tableConfig.rowClassName,
@@ -164,7 +384,7 @@ namespace GFW
                 }
                 else
                 {
-                    BuildOneTable(tableConfig.tableClassName,
+                    BuildStaticCsvClass(tableConfig.tableClassName,
                         CsvPathEditor.Path_ExcelInputDir + tableConfig.shortPath);
                 }
             }
@@ -172,6 +392,76 @@ namespace GFW
             AssetDatabase.Refresh();
             EditorUtility.ClearProgressBar();
             GameLogger.Log("Convert Complete!");
+        }
+
+
+
+        [MenuItem("program/Config/BuildOneServerTable", false, 201)]
+        private static void BuildOneServerTable()
+        {
+            if (!Directory.Exists(Path_GenerateExcel))
+                Directory.CreateDirectory(Path_GenerateExcel);
+
+            try
+            {
+                string path = EditorUtility.OpenFilePanel("Select Excel", CsvPathEditor.Path_ExcelInputDir, "xlsx");
+                path = path.Replace("\\", "/");
+                int tableNameIndex = path.LastIndexOf('/');
+                int tableNameIndex2 = path.LastIndexOf('.');
+                string tableName = path.Substring(tableNameIndex + 1, tableNameIndex2 - tableNameIndex - 1);
+                if (string.IsNullOrEmpty(path)) return;
+
+                MySqlConnection conn = openConn();
+                BuildOneServerTable(conn, path, "df_" + tableName.ToLower());
+                CloseConn(conn);
+
+                GameLogger.Log("Convert Complete!");
+                EditorUtility.ClearProgressBar();
+                EditorUtility.DisplayDialog("提示", "打表成功", "好的");
+            }
+            catch (Exception ex)
+            {
+                GameLogger.LogError(ex.ToString());
+                EditorUtility.ClearProgressBar();
+                EditorUtility.DisplayDialog("提示", "打表失败！！！！！", "好的");
+            }
+        }
+
+        [MenuItem("program/Config/BuildAllServerTables", false, 202)]
+        private static void BuildAllServerTable()
+        {
+            if (!Directory.Exists(Path_GenerateExcel))
+                Directory.CreateDirectory(Path_GenerateExcel);
+
+            try
+            {
+                GameLogger.Log(CsvPathEditor.Path_ExcelInputDir);
+                List<string> list = new List<string>();
+                GetAllFile(CsvPathEditor.Path_ExcelInputDir, list);
+
+                for (int i = 0; i < list.Count; i++)
+                {
+                    string path = list[i];
+                    path = path.Replace("\\", "/");
+                    int tableNameIndex = path.LastIndexOf('/');
+                    int tableNameIndex2 = path.LastIndexOf('.');
+                    string tableName = path.Substring(tableNameIndex + 1, tableNameIndex2 - tableNameIndex - 1);
+                    if (string.IsNullOrEmpty(path)) return;
+
+                    MySqlConnection conn = openConn();
+                    BuildOneServerTable(conn, path, "df_" + tableName.ToLower());
+                    CloseConn(conn);
+                }
+                GameLogger.Log("Convert Complete!");
+                EditorUtility.ClearProgressBar();
+                EditorUtility.DisplayDialog("提示", "打表成功", "好的");
+            }
+            catch (Exception ex)
+            {
+                GameLogger.LogError(ex.ToString());
+                EditorUtility.ClearProgressBar();
+                EditorUtility.DisplayDialog("提示", "打表失败！！！！！", "好的");
+            }
         }
 
         private static void BuildOneServerTable(MySqlConnection conn, string path, string tableName)
@@ -286,6 +576,21 @@ namespace GFW
             }
         }
 
+        public static void GetAllFile(string path, List<string> FileList)
+        {
+            DirectoryInfo dir = new DirectoryInfo(path);
+            FileInfo[] fil = dir.GetFiles();
+            DirectoryInfo[] dii = dir.GetDirectories();
+            foreach (FileInfo f in fil)
+            {
+                FileList.Add(f.FullName); //添加文件路径到列表中  
+            }
+            //获取子文件夹内的文件列表，递归遍历  
+            foreach (DirectoryInfo d in dii)
+            {
+                GetAllFile(d.FullName, FileList);
+            }
+        }
 
         //建立MySql数据库连接
         public static MySqlConnection openConn()
@@ -309,313 +614,6 @@ namespace GFW
         {
             mysqlcon.Close();
             mysqlcon.Dispose();
-        }
-
-        [MenuItem("program/Config/ConvertOneTable", false,102)]
-        private static void BuildOneTable()
-        {
-            if (!Directory.Exists(Path_GenerateExcel))
-                Directory.CreateDirectory(Path_GenerateExcel);
-
-            string path = EditorUtility.OpenFilePanel("Select Excel", CsvPathEditor.Path_ExcelInputDir, "xlsx");
-            path = path.Replace("\\", "/");
-            if (string.IsNullOrEmpty(path)) return;
-            TableConfig tableConfig = null;
-            for (int i = 0; i < tableList.Count; i++)
-            {
-                string shortPath = tableList[i].shortPath;
-                shortPath = shortPath.Replace("\\", "/");
-
-                if (path.IndexOf(shortPath) > -1)
-                {
-                    tableConfig =tableList[i];
-                    break;
-                }
-            }
-            if (tableConfig != null)
-            {
-                if (!string.IsNullOrEmpty(tableConfig.rowClassName))
-                {
-                    BuildOneTable(tableConfig.tableClassName, tableConfig.rowClassName, path);
-                }
-                else
-                {
-                    BuildOneTable(tableConfig.tableClassName, path);
-                }
-            }
-            else
-            {
-                GameLogger.LogError("cannot find table config");
-            }
-            EditorUtility.ClearProgressBar();
-            GameLogger.Log("Convert Complete!");
-        }
-
-        private static void BuildOneTable(string tableTypeName, string rowTypeName, string path)
-        {
-            Assembly amb = System.AppDomain.CurrentDomain.Load("Assembly-CSharp");
-            Type tableType = amb.GetType(tableTypeName);
-            Type rowType = amb.GetType(rowTypeName);
-
-            if (tableType == null || rowType == null)
-            {
-                GameLogger.LogError(string.Format("table type not find :{0}", tableTypeName));
-                return;
-            }
-
-            EditorUtility.DisplayProgressBar("ConvertTable", path, UnityEngine.Random.value);
-
-            FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read);
-            IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream);
-            //do  //只读第一个sheet
-            //{
-            excelReader.Read();
-
-            string outputPath = Path_GenerateExcel + "/" + tableTypeName + ".asset";
-
-            ITable newHeroTable = AssetDatabase.LoadAssetAtPath<ITable>(outputPath);
-            if (newHeroTable == null)
-            {
-                newHeroTable = (ITable)Activator.CreateInstance(tableType);
-                AssetDatabase.CreateAsset(newHeroTable, outputPath);
-            }
-            newHeroTable.Clear();
-
-            Dictionary<int, string> fieldDict = new Dictionary<int, string>();
-            Dictionary<int, FieldInfo> fieldInfoList = new Dictionary<int, FieldInfo>();
-
-            for (int i = 0; i < excelReader.FieldCount; i++)
-            {
-                if (!excelReader.IsDBNull(i))
-                {
-                    string fieldName = excelReader.GetString(i);
-
-                    FieldInfo fieldInfo = rowType.GetField(fieldName,
-                        BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-                    if (fieldInfo != null)
-                    {
-                        fieldDict.Add(i, fieldName);
-                        fieldInfoList.Add(i, fieldInfo);
-                    }
-                }
-            }
-
-            excelReader.Read();
-            excelReader.Read();
-            excelReader.Read();
-            for (int i = 0; i < excelReader.FieldCount; i++)
-            {
-                if (!excelReader.IsDBNull(i))
-                {
-                    string ABC = excelReader.GetString(i);
-                    if (ABC != "A" && ABC != "C")
-                    {
-                        fieldDict.Remove(i);
-                        fieldInfoList.Remove(i);
-                    }
-                }
-            }
-
-            int rowCount = 5;
-            while (excelReader.Read())
-            {
-                if (!excelReader.IsDBNull(0) && !string.IsNullOrEmpty(excelReader.GetString(0)))
-                {
-                    IRow rowCVO = (IRow)Activator.CreateInstance(rowType);
-                    foreach (var pair in fieldDict)
-                    {
-                        int index = pair.Key;
-
-                        string value = excelReader.IsDBNull(index) ? "" : excelReader.GetString(index);
-                        if (!ConvertUtil.SetFieldValue(fieldInfoList[index], rowCVO, value))
-                        {
-                            GameLogger.LogError(tableTypeName + " row:" + rowCount);
-                        }
-                    }
-                    newHeroTable.AddRow(rowCVO);
-                }
-                else
-                {
-                    GameLogger.LogError(string.Format("rowRead Error：{0} {1}", tableTypeName, excelReader.GetString(1)));
-                }
-                rowCount++;
-            }
-            //} while (excelReader.NextResult());
-
-            //Debug.Log(path + " Complete!");
-
-            EditorUtility.SetDirty(newHeroTable);
-            AssetDatabase.SaveAssets();
-        }
-
-        private static void BuildOneTable(string tableName, string path)
-        {
-            EditorUtility.DisplayProgressBar("ConvertTable", path, UnityEngine.Random.value);
-
-            FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read);
-            IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream);
-            //do  //只读第一个sheet
-            //{
-            excelReader.Read();
-
-            string outputPath = Path_GenerateExcel + "/" + tableName + ".asset";
-            if (path.IndexOf("LanguageLocal.xlsx") > -1)
-            {
-                outputPath = "Assets/Resources/" + tableName + ".asset";
-            }
-            else
-            {
-                outputPath = Path_GenerateExcel + "/" + tableName + ".asset";
-            }
-
-            CSVFile csvFile = AssetDatabase.LoadAssetAtPath<CSVFile>(outputPath);
-
-            if (csvFile == null)
-            {
-                csvFile = new CSVFile();
-                AssetDatabase.CreateAsset(csvFile, outputPath);
-            }
-            csvFile.Clear();
-
-            csvFile.tableName = tableName;
-
-            Dictionary<int, string> fieldDict = new Dictionary<int, string>();
-            for (int i = 0; i < excelReader.FieldCount; i++)
-            {
-                if (!excelReader.IsDBNull(i))
-                {
-                    string fieldName = excelReader.GetString(i);
-                    fieldDict.Add(i, fieldName);
-                }
-            }
-
-            excelReader.Read();
-            excelReader.Read();
-            excelReader.Read();
-            for (int i = 0; i < excelReader.FieldCount; i++)
-            {
-                if (!excelReader.IsDBNull(i))
-                {
-                    string ABC = excelReader.GetString(i);
-                    if (ABC != "A" && ABC != "C")
-                    {
-                        fieldDict.Remove(i);
-                    }
-                }
-            }
-            /////
-            string retField = string.Empty;
-            foreach (var pair in fieldDict)
-            {
-                if (!string.IsNullOrEmpty(retField))
-                    retField += "^";
-                retField += pair.Value;
-            }
-            csvFile.dataList.Add(retField);
-            /////
-            while (excelReader.Read())
-            {
-                string ret = string.Empty;
-                foreach (var pair in fieldDict)
-                {
-                    int index = pair.Key;
-                    string value = excelReader.IsDBNull(index) ? "" : excelReader.GetString(index);
-
-                    if (!string.IsNullOrEmpty(ret))
-                        ret += "^";
-                    ret += value;
-                }
-                csvFile.dataList.Add(ret);
-            }
-            //} while (excelReader.NextResult());
-            //Debug.Log(path + " Complete!");
-            EditorUtility.SetDirty(csvFile);
-            AssetDatabase.SaveAssets();
-        }
-
-
-        [MenuItem("program/Config/BuildAllServerTables", false, 202)]
-        private static void BuildAllServerTable()
-        {
-            if (!Directory.Exists(Path_GenerateExcel))
-                Directory.CreateDirectory(Path_GenerateExcel);
-
-            try
-            {
-                GameLogger.Log(CsvPathEditor.Path_ExcelInputDir);
-                List<string> list = new List<string>();
-                GetAllFile(CsvPathEditor.Path_ExcelInputDir, list);
-
-                for (int i = 0; i < list.Count; i++)
-                {
-                    string path = list[i];
-                    path = path.Replace("\\", "/");
-                    int tableNameIndex = path.LastIndexOf('/');
-                    int tableNameIndex2 = path.LastIndexOf('.');
-                    string tableName = path.Substring(tableNameIndex + 1, tableNameIndex2 - tableNameIndex - 1);
-                    if (string.IsNullOrEmpty(path)) return;
-
-                    MySqlConnection conn = openConn();
-                    BuildOneServerTable(conn, path, "df_" + tableName.ToLower());
-                    CloseConn(conn);
-                }
-                GameLogger.Log("Convert Complete!");
-                EditorUtility.ClearProgressBar();
-                EditorUtility.DisplayDialog("提示", "打表成功", "好的");
-            }
-            catch (Exception ex)
-            {
-                GameLogger.LogError(ex.ToString());
-                EditorUtility.ClearProgressBar();
-                EditorUtility.DisplayDialog("提示", "打表失败！！！！！", "好的");
-            }
-        }
-
-        public static void GetAllFile(string path, List<string> FileList)
-        {
-            DirectoryInfo dir = new DirectoryInfo(path);
-            FileInfo[] fil = dir.GetFiles();
-            DirectoryInfo[] dii = dir.GetDirectories();
-            foreach (FileInfo f in fil)
-            {
-                FileList.Add(f.FullName); //添加文件路径到列表中  
-            }
-            //获取子文件夹内的文件列表，递归遍历  
-            foreach (DirectoryInfo d in dii)
-            {
-                GetAllFile(d.FullName, FileList);
-            }
-        }
-
-        [MenuItem("program/Config/BuildOneServerTable", false,201)]
-        private static void BuildOneServerTable()
-        {
-            if (!Directory.Exists(Path_GenerateExcel))
-                Directory.CreateDirectory(Path_GenerateExcel);
-
-            try
-            {
-                string path = EditorUtility.OpenFilePanel("Select Excel", CsvPathEditor.Path_ExcelInputDir, "xlsx");
-                path = path.Replace("\\", "/");
-                int tableNameIndex = path.LastIndexOf('/');
-                int tableNameIndex2 = path.LastIndexOf('.');
-                string tableName = path.Substring(tableNameIndex + 1, tableNameIndex2 - tableNameIndex - 1);
-                if (string.IsNullOrEmpty(path)) return;
-
-                MySqlConnection conn = openConn();
-                BuildOneServerTable(conn, path, "df_" + tableName.ToLower());
-                CloseConn(conn);
-
-                GameLogger.Log("Convert Complete!");
-                EditorUtility.ClearProgressBar();
-                EditorUtility.DisplayDialog("提示", "打表成功", "好的");
-            }
-            catch (Exception ex)
-            {
-                GameLogger.LogError(ex.ToString());
-                EditorUtility.ClearProgressBar();
-                EditorUtility.DisplayDialog("提示", "打表失败！！！！！", "好的");
-            }
         }
 
     }

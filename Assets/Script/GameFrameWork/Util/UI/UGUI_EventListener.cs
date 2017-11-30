@@ -43,8 +43,7 @@ namespace GFW
 
         public static UGUI_EventListener Get(GameObject go)
         {
-            UGUI_EventListener listener = go.GetComponent<UGUI_EventListener>();
-            if (listener == null) listener = go.AddComponent<UGUI_EventListener>();
+            UGUI_EventListener listener = go.GetComponent<UGUI_EventListener>() ?? go.AddComponent<UGUI_EventListener>();
             return listener;
         }
 

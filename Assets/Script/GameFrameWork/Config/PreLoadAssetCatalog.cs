@@ -1,21 +1,20 @@
 ﻿using System.Collections.Generic;
 using GFW;
 
+public class PreLoadSourceInfo
+{
+    public string AssetName;
+    public AssetType AssetType;
+
+    public PreLoadSourceInfo(string name, AssetType assetType)
+    {
+        this.AssetName = name;
+        this.AssetType = assetType;
+    }
+}
+
 public static class PreLoadAssetCatalog
 {
-
-
-    public class PreLoadSourceInfo
-    {
-        public string AssetName;
-        public AssetType AssetType;
-
-        public PreLoadSourceInfo(string name, AssetType assetType)
-        {
-            this.AssetName = name;
-            this.AssetType = assetType;
-        }
-    }
 
     public static List<string> TableList = new List<string>()
     {

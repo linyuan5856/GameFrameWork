@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
 namespace GFW
@@ -19,18 +22,63 @@ namespace GFW
     public enum AssetType
     {
         UI,
-        MountScene,
         Music,
         Table,
         Scene,
-        Effect,
-        LoadingBG,
-    
+        Effect,     
         AssetBundle,
     }
+    [Serializable]
+    public class LoaderManager : MonoSingleton<LoaderManager>, ISerializationCallbackReceiver
+    {
+        #region 序列化
+        [SerializeField]
+        List<string> _assetkey = new List<string>();
+        [SerializeField]
+        List<CacheAssetInfo> _assetvalue = new List<CacheAssetInfo>();
+        [SerializeField]
+        List<string> _abKey = new List<string>();
+        [SerializeField]
+        List<AssetBundle> _abValue = new List<AssetBundle>();
 
-    public class LoaderManager : MonoSingleton<LoaderManager>
-    {       
+        public void OnBeforeSerialize()
+        {
+            _assetkey.Clear();
+            _assetvalue.Clear();
+            _abKey.Clear();
+            _abValue.Clear();
+
+            foreach (var asset in assetCacheDict)
+            {
+                this._assetkey.Add(asset.Key);
+                this._assetvalue.Add(asset.Value);
+            }
+
+            foreach (var ab in bundleDict)
+            {
+                this._abKey.Add(ab.Key);
+                this._abValue.Add(ab.Value);
+            }
+        }
+
+        public void OnAfterDeserialize()
+        {
+            this.assetCacheDict.Clear();
+            this.bundleDict.Clear();
+
+            for (int i = 0; i < this._assetkey.Count; i++)
+            {
+                this.assetCacheDict[this._assetkey[i]] = this._assetvalue[i];
+            }
+
+            for (int i = 0; i < this._abKey.Count; i++)
+            {
+                this.bundleDict[this._abKey[i]]=this._abValue[i];
+            }
+
+        }
+        #endregion
+        [Serializable]
         class CacheAssetInfo
         {
             public CacheAssetInfo(string name, Object asset, CacheType cacheType)
@@ -51,18 +99,19 @@ namespace GFW
         private readonly AssetDownLoader assetDownLoader = new AssetDownLoader();
         private readonly AssetBundleDownLoader abDownLoader = new AssetBundleDownLoader();
 
+
         private Dictionary<string, CacheAssetInfo> assetCacheDict = new Dictionary<string, CacheAssetInfo>();
         private Dictionary<string, Object> tableDict = new Dictionary<string, Object>();
-        private Dictionary<string, AssetBundle> bundleDict=new Dictionary<string, AssetBundle>();
-       
-        private int abLoadedCount = 0;
-        private int abLoadedError = 0;      
-        private Action _afterAbLoaded;
+        private Dictionary<string, AssetBundle> bundleDict = new Dictionary<string, AssetBundle>();
 
+        private int abLoadedCount = 0;
+        private int abLoadedError = 0;
+        private Action _afterAbLoaded;
+       
         private int assetLoadedCount = 0;
         private Action _afterPreAssetLoaded;
 
-
+        #region 加载 读取 Table
         public Object LoadTable(string tableName, AssetBundle ab = null, string key = "ID")
         {
             if (tableDict.ContainsKey(tableName) && tableDict[tableName] != null)
@@ -70,26 +119,15 @@ namespace GFW
                 return tableDict[tableName];
             }
             ScriptableObject asset = null;
-            if (tableName == "LanguageLocal")
+
+            if (ab != null)
             {
-                asset = (ScriptableObject)Resources.Load(tableName);
-            }
-            else
-            {
-                if (ab != null)
-                {
-                    asset = (ScriptableObject)ab.LoadAsset(tableName);
-                }
-                else
-                {
-#if UNITY_EDITOR
-               asset=AssetDatabase.LoadAssetAtPath<ScriptableObject>(String.Format(GameDefine.TABLE_PATH,tableName));
-#endif                 
-                }
+                asset = (ScriptableObject)ab.LoadAsset(tableName);
             }
 
-#if UNITY_EDITOR//编辑下下直接修改数值会被编辑器保存
-        asset = Object.Instantiate(asset);
+#if UNITY_EDITOR
+            asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(String.Format(GameDefine.TABLE_PATH, tableName));
+            asset = Object.Instantiate(asset);//编辑下下直接修改数值会被编辑器保存
 #endif
 
             if (asset is ITable)
@@ -126,6 +164,7 @@ namespace GFW
             GameLogger.LogError("can not find table data:" + tableName);
             return default(T);
         }
+        #endregion
 
         #region 加载资源
         string GetAssetPath(string name, AssetType assettype)
@@ -142,17 +181,17 @@ namespace GFW
             return path;
         }
 
-        public T LoadAsset<T>(string name, AssetType assettype)where  T:UnityEngine.Object
-        {
-            string path=GetAssetPath(name,assettype);
-            
-           return LoadAsset<T>(path);
-        }
-
-        public void LoadAssetAsync<T>(string name, AssetType assettype,object extraObject, Action<Object, object> onComplete = null)
+        public T LoadAsset<T>(string name, AssetType assettype) where T : UnityEngine.Object
         {
             string path = GetAssetPath(name, assettype);
-            LoadAssetAsync<T>(path,null,extraObject,onComplete,null);
+
+            return LoadAsset<T>(path);
+        }
+
+        public void LoadAssetAsync<T>(string name, AssetType assettype, object extraObject, Action<Object, object> onComplete = null)
+        {
+            string path = GetAssetPath(name, assettype);
+            LoadAssetAsync<T>(path, null, extraObject, onComplete, null);
         }
 
 
@@ -170,7 +209,7 @@ namespace GFW
             T prefab = assetDownLoader.LoadAsset<T>(name, bundle);
 
             this.PushToCache(cacheName, prefab, cacheType);
-
+            
             return prefab;
         }
 
@@ -225,16 +264,16 @@ namespace GFW
         #endregion
 
         #region 登陆游戏预加载
-        public void PreLoadGameAssetBundles(Action callback)
+        public void PreLoadGameAssetBundles(Action onComplete)
         {
             GameLogger.Log("Begin Load AssetBundles");
 
-            this._afterAbLoaded = callback;
-
+            this._afterAbLoaded = onComplete;
+           
 #if UNITY_EDITOR
             if (GameConfigPVO.Instance.EditorUseBundleConfig)
             {
-                PreLoadAssetCatalog.AssetBundleList.Add(new PreLoadAssetCatalog.PreLoadSourceInfo("configs", AssetType.AssetBundle));
+                PreLoadAssetCatalog.AssetBundleList.Add(new PreLoadSourceInfo("configs", AssetType.AssetBundle));
             }
 #else
             PreLoadAssetCatalog.AssetBundleList.Add(new PreLoadAssetCatalog.PreLoadSourceInfo("configs", AssetType.AssetBundle));
@@ -242,7 +281,8 @@ namespace GFW
             abLoadedCount = 0;
             abLoadedError = 0;
             this.abDownLoader.onCompleteEvent.AddListener(this.OnABComplete);
-            foreach (PreLoadAssetCatalog.PreLoadSourceInfo si in PreLoadAssetCatalog.AssetBundleList)
+            this.abDownLoader.onLoadEvent.AddListener(this.OnLoadingAb);
+            foreach (PreLoadSourceInfo si in PreLoadAssetCatalog.AssetBundleList)
             {
                 abDownLoader.DownLoadAB(si.AssetName, AssetBundleDownLoader.WWWExistType.AlwaysExist, si);
             }
@@ -252,7 +292,7 @@ namespace GFW
         {
             GameLogger.Log("Begin Load PreLoadAsset");
             this._afterPreAssetLoaded = callback;
-            if (PreLoadAssetCatalog.AssetList.Count==0&&this._afterPreAssetLoaded!=null)
+            if (PreLoadAssetCatalog.AssetList.Count == 0 && this._afterPreAssetLoaded != null)
             {
                 _afterPreAssetLoaded();
                 _afterPreAssetLoaded = null;
@@ -260,7 +300,7 @@ namespace GFW
 
             for (int i = 0; i < PreLoadAssetCatalog.AssetList.Count; i++)
             {
-                PreLoadAssetCatalog.PreLoadSourceInfo preLoadSourceInfo = PreLoadAssetCatalog.AssetList[i];
+                PreLoadSourceInfo preLoadSourceInfo = PreLoadAssetCatalog.AssetList[i];
                 LoadAssetAsync<GameObject>(preLoadSourceInfo.AssetName, null, preLoadSourceInfo,
                     OnAssetComplete, null, CacheType.Always);
             }
@@ -284,18 +324,18 @@ namespace GFW
         private void OnABComplete(WWW www, AssetBundleDownLoader.EResult result, System.Object _param)
         {
             abLoadedCount++;
-            PreLoadAssetCatalog.PreLoadSourceInfo preLoadSourceInfo = (PreLoadAssetCatalog.PreLoadSourceInfo)_param;
+            PreLoadSourceInfo preLoadSourceInfo = (PreLoadSourceInfo)_param;
             //Logger.LogTest(string.Format("DonwLoad {0} Complete Count -->{1}",preLoadSourceInfo.AssetName,abLoadedCount));
 
             if (result == AssetBundleDownLoader.EResult.Success)
             {
                 //if (!this.bundleDict.ContainsKey(preLoadSourceInfo.AssetName))
                 //{
-                    this.bundleDict[preLoadSourceInfo.AssetName] = www.assetBundle;
+                this.bundleDict[preLoadSourceInfo.AssetName] = www.assetBundle;
                 //}
 
                 if (abLoadedCount == PreLoadAssetCatalog.AssetBundleList.Count)
-                {                  
+                {
                     if (abLoadedError > 0)
                     {
                         GameLogger.LogError("not enough memory or storage space.");
@@ -304,7 +344,8 @@ namespace GFW
                     else
                     {
                         GameLogger.Log("AssetBundles DownLoad Done");
-                        this.abDownLoader.onCompleteEvent.RemoveListener(this.OnABComplete);                      
+                        this.abDownLoader.onCompleteEvent.RemoveAllListeners();
+                        this.abDownLoader.onLoadEvent.RemoveAllListeners();
                         if (this._afterAbLoaded != null)
                         {
                             this._afterAbLoaded();
@@ -318,6 +359,60 @@ namespace GFW
                 abLoadedError++;
             }
         }
+
+        private void OnLoadingAb(float progress,System.Object extraParam)
+        {
+          //  PreLoadSourceInfo info = (PreLoadSourceInfo)extraParam;
+
+           // UnityEngine.Debug.LogError(string.Format("Load Bundle Name--<{0}  ... Progress --> {1}",info.AssetName,progress));
+        }
+        #endregion
+
+        #region 加载Scene
+
+        private string _loadSceneName;
+        private Action _loadSceneComplete;
+        private Action<float> _loadingScene;
+        public void LoadSceneAsync(string scene, Action<float> onLoading, Action onComplete)
+        {
+            _loadSceneName = scene;
+            _loadingScene = onLoading;
+            _loadSceneComplete = onComplete;
+            this.StartCoroutine(LoadScene());
+        }
+
+        IEnumerator LoadScene()
+        {
+            GameLogger.LogWarn(string.Format("Load Scene --> {0}",_loadSceneName));
+
+            AsyncOperation ao = SceneManager.LoadSceneAsync(_loadSceneName);
+            if (ao != null)
+            {
+                ao.allowSceneActivation = false;
+
+                while (true)
+                {
+                    if (_loadingScene != null)
+                    {
+                        _loadingScene(ao.progress);
+                    }
+                    yield return ao.isDone;
+                    break;
+                }
+
+                GameLogger.LogWarn(string.Format("Scene --> {0} is Loaded", _loadSceneName));
+
+                if (_loadSceneComplete!=null)
+                {
+                    _loadSceneComplete();
+                }
+
+                ao.allowSceneActivation = true;
+                _loadingScene = null;
+                _loadSceneComplete = null;
+            }
+        }
+
         #endregion
 
 
@@ -358,7 +453,7 @@ namespace GFW
                 var result = www.text;
 
                 if (callback != null)
-                    callback(result, www.error);              
+                    callback(result, www.error);
             }
             www.Dispose();
         }
@@ -369,6 +464,8 @@ namespace GFW
             this.assetDownLoader.UpdateLoad();
             this.abDownLoader.UpdateLoad();
         }
+
+
     }
 
     public sealed class AssetBundleDownLoader
@@ -531,9 +628,10 @@ namespace GFW
             {
                 info.www.Dispose();
             }
-
+          
+          
             info.www = WWW.LoadFromCacheOrDownload(url, info.Version);
-
+          
             if (info.www == null)
             {
                 info.www = new WWW(url);
