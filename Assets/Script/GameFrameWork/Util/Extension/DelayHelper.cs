@@ -11,7 +11,7 @@ namespace GFW
         {
             if (_delayHelper==null)
             {
-                GameUtil.AddComponentToP<DelayHelper>(MainGame.Instance.gameObject);
+               _delayHelper= GameUtil.AddComponentToP<DelayHelper>(MainGame.Instance.gameObject);
             }
             return _delayHelper;
         }

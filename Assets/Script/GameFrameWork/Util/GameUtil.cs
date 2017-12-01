@@ -32,12 +32,12 @@ namespace GFW
             return (code < 0 ? "-0x" : "0x") + Convert.ToString(Math.Abs(code), 16);
         }
 
-        public static void AddComponentToP<T>(GameObject parent) where T : Component
+        public static T AddComponentToP<T>(GameObject parent) where T : Component
         {
             string name = typeof(T).Name;
             GameObject go = new GameObject(name);
-            go.SetParent(parent);
-            go.AddComponent<T>();
+            go.SetParent(parent);         
+            return go.AddComponent<T>();
         }
 
 

@@ -11,7 +11,7 @@ public class LoaderManagerEditor : UnityEditor.Editor
     private SerializedProperty _assetCacheDicValue;
 
     private SerializedProperty _abCacheDicKey;
-    private SerializedProperty _abCacheDicValue;
+    //private SerializedProperty _abCacheDicValue;
 
     private GUIContent btnContent;
     private bool _assetDetail;
@@ -31,7 +31,7 @@ public class LoaderManagerEditor : UnityEditor.Editor
         this._assetCacheDicValue = this.serializedObject.FindProperty("_assetvalue");
 
         this._abCacheDicKey = this.serializedObject.FindProperty("_abKey");
-        this._abCacheDicValue = this.serializedObject.FindProperty("_abValue");
+        //this._abCacheDicValue = this.serializedObject.FindProperty("_abValue");
 
         btnContent = new GUIContent("Detail");
         btnContent.tooltip = "详细描述";
