@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using UnityEditor;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
-namespace GFW
+namespace Pandora
 {
     public class UIManager : MonoSingleton<UIManager>
     {
@@ -109,7 +106,9 @@ namespace GFW
                 {
                     var canvasAsset = LoaderManager.Instance.LoadAsset<GameObject>(GameDefine.UI_Canvas, AssetType.UI);
                     var canvas = (GameObject)UnityEngine.Object.Instantiate(canvasAsset, UiRoot.transform);
-
+#if UNITY_EDITOR
+                    canvas.name = GameUtil.AddString("canvas_", uiName);
+#endif
                     var controller = canvas.GetComponent<UICanvasController>();
                     this._cacheCanvasDict[uiName] = controller;
 

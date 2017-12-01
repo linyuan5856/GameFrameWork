@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 
-namespace GFW
+namespace Pandora
 {
     public class GameState : BaseState
     {
@@ -15,7 +13,7 @@ namespace GFW
 
         protected override void OnInitStage()
         {
-            UnityEngine.Resources.UnloadUnusedAssets();
+            Resources.UnloadUnusedAssets();
             GC.Collect();
 
             UIManager.Instance.OpenWindow("UI_Login");

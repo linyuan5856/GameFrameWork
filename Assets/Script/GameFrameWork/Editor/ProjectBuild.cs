@@ -8,7 +8,7 @@ using Excel;
 using System.Reflection;
 
 
-namespace GFW
+namespace Pandora
 {
     public class ProjectBuild
     {

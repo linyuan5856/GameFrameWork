@@ -1,6 +1,6 @@
 ﻿using UnityEngine.SceneManagement;
 
-namespace GFW
+namespace Pandora
 {
     public class BaseState : State
     {

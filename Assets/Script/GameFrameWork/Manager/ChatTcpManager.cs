@@ -2,7 +2,7 @@
 using System.Collections;
 using UnityEngine;
 
-namespace GFW
+namespace Pandora
 {
     public class ChatTcpManager : MonoSingleton<ChatTcpManager>
     {

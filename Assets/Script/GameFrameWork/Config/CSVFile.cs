@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 
-namespace GFW
+namespace Pandora
 {
     [System.Serializable]
     public class CSVFile : ScriptableObject

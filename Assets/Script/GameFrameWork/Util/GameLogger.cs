@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Text;
 using UnityEngine;
 
-namespace GFW
+namespace Pandora
 {
     public class GameLogger
     {

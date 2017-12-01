@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace GFW
+namespace Pandora
 {
     /// <summary>
     /// 该类会读取txt文本后 反射字段赋值 不要乱加字段

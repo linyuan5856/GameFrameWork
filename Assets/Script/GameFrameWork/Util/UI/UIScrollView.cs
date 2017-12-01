@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace GFW
+namespace Pandora
 {
     [RequireComponent(typeof(ScrollRect))]
     public class UIScrollView : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler

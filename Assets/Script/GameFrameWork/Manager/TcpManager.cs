@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace GFW
+namespace Pandora
 {
     public class TcpManager : HMMonoBehaviour
     {

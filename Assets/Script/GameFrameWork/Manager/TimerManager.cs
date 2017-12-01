@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using GFW;
+using Pandora;
 using UnityEngine;
-namespace GFW
+namespace Pandora
 {
     public interface ICalculateTime
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace GFW
+namespace Pandora
 {
     public class VersionManager : Singleton<VersionManager>
     {

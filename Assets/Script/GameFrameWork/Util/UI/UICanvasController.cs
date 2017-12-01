@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace GFW
+namespace Pandora
 {
     public class UICanvasController : MonoBehaviour
     {

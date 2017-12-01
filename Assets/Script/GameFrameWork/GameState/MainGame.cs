@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
+using UnityEngine.EventSystems;
 
-namespace GFW
+namespace Pandora
 {
     public class MainGame : MonoSingleton<MainGame>
     {
@@ -48,7 +49,7 @@ namespace GFW
             stateMachine = new StateMachine();
             stateMachine.RegisterState(new PreLoadState());
             stateMachine.RegisterState(new GameState());
-            stateMachine.RegisterState(new TestState());
+            stateMachine.RegisterState(new TemplateState());
             Instance.ChangeState<PreLoadState>();
         }
 

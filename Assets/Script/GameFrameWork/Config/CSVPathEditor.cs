@@ -3,7 +3,7 @@ using UnityEditor;
 using System;
 using System.Collections.Generic;
 
-namespace GFW
+namespace Pandora
 {
     [Serializable]
     public class CSVPathEditor : ScriptableObject

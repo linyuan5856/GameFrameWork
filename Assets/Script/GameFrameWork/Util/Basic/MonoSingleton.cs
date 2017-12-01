@@ -3,7 +3,7 @@
 /// </summary>
 using UnityEngine;
 
-namespace GFW
+namespace Pandora
 {
     public abstract class MonoSingleton<T> : HMMonoBehaviour where T : MonoSingleton<T>
     {

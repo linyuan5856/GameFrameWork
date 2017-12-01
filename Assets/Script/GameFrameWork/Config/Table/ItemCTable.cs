@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using GFW;
+using Pandora;
 
 [System.Serializable]
 public class ItemCTable : BaseTable<ItemCVO>

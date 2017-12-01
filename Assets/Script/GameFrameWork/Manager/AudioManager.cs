@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace GFW
+namespace Pandora
 {
     public class AudioManager : MonoSingleton<AudioManager>
     {

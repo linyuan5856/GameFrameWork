@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace GFW
+namespace Pandora
 {
     public class SVO : EventDispatcher<object>
     {

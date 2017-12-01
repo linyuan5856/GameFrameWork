@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace GFW
+namespace Pandora
 {
     public abstract class UIComponentGroup : UIBaseComponent
     {

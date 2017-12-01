@@ -23,7 +23,7 @@
 using System;
 using System.Threading;
 
-namespace GFW
+namespace Pandora
 {
     public class TimeBomb
     {

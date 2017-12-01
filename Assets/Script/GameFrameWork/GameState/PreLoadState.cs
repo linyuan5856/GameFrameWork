@@ -5,7 +5,7 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace GFW
+namespace Pandora
 {
     public class PreLoadState : BaseState
     {
@@ -14,7 +14,7 @@ namespace GFW
         {
             base.OnInitStage();
 
-            LoaderManager.Instance.LoadSceneAsync(GameDefine.PreLoadScene,null,this.LoadGameConfig);         
+            this.LoadGameConfig();
         }
     
         void LoadGameConfig()
@@ -87,9 +87,8 @@ namespace GFW
                     return;
                 }
 
-                GameLogger.Log(string.Format("SeverVersion:-->{0} ",VersionManager.Instance.SeverVersion));
-
                 VersionManager.Instance.SetServerVersion(text);
+                GameLogger.Log(string.Format("SeverVersion:-->{0} ", VersionManager.Instance.SeverVersion));
 
                 this.LoadSeverList();
             });
@@ -179,7 +178,7 @@ namespace GFW
         void BeginGame()
         {
             GameLogger.Log("Preload Ready-->Enter Game");
-            MainGame.Instance.ChangeState<GameState>();
+            MainGame.Instance.ChangeState<TemplateState>();
         }
 
     }

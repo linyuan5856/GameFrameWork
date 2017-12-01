@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace GFW
+namespace Pandora
 {
     public class Singleton<CLASS_NAME> where CLASS_NAME : new()
     {

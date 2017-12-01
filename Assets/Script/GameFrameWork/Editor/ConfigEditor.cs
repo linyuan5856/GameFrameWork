@@ -8,7 +8,7 @@ using Excel;
 using MySql.Data.MySqlClient;
 using UnityEngine;
 
-namespace GFW
+namespace Pandora
 {
     public class ConfigEditor
     {

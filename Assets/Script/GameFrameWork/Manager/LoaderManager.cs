@@ -10,7 +10,7 @@ using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
-namespace GFW
+namespace Pandora
 {
     public enum CacheType
     {
@@ -31,6 +31,7 @@ namespace GFW
     [Serializable]
     public class LoaderManager : MonoSingleton<LoaderManager>, ISerializationCallbackReceiver
     {
+#if UNITY_EDITOR
         #region 序列化
         [SerializeField]
         List<string> _assetkey = new List<string>();
@@ -78,6 +79,7 @@ namespace GFW
 
         }
         #endregion
+#endif
         [Serializable]
         class CacheAssetInfo
         {

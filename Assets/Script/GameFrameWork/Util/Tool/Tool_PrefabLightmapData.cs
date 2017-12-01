@@ -6,7 +6,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using UnityEngine.SceneManagement;
 
-namespace GFW
+namespace Pandora
 {
     [DisallowMultipleComponent]
     public class Tool_PrefabLightmapData : MonoBehaviour

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GFW
+namespace Pandora
 {
     public interface IEvent
     {

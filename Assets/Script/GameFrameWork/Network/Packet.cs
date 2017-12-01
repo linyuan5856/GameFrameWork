@@ -22,7 +22,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace GFW
+namespace Pandora
 {
     public class Packet : LineBuffer
     {

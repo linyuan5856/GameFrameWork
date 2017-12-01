@@ -4,7 +4,7 @@ using UnityEngine;
 using System;
 
 
-namespace GFW
+namespace Pandora
 {
     public abstract class ITable : ScriptableObject
     {
@@ -36,14 +36,14 @@ namespace GFW
                     }
                     else
                     {
-                        GFW.GameLogger.LogError(string.Format("主键重复 Table名称 {0}  主键 {1} ", this.GetType().Name, key));
+                        GameLogger.LogError(string.Format("主键重复 Table名称 {0}  主键 {1} ", this.GetType().Name, key));
                     }
 
                 }
                 catch (Exception ex)
                 {
-                    GFW.GameLogger.Log("RowKey is:" + row.getKey());
-                    GFW.GameLogger.LogError(ex.ToString());
+                    GameLogger.Log("RowKey is:" + row.getKey());
+                    GameLogger.LogError(ex.ToString());
                 }
             }
         }
@@ -61,7 +61,7 @@ namespace GFW
             if (rowIndexDict.ContainsKey(id))
                 return rowIndexDict[id];
             else
-                GFW.GameLogger.LogError(string.Format("can not find table data: {0} ,{1}", this.GetType().Name, id));
+                GameLogger.LogError(string.Format("can not find table data: {0} ,{1}", this.GetType().Name, id));
             return default(T);
         }
 

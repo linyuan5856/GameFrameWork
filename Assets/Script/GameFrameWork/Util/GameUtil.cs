@@ -3,7 +3,7 @@ using System.Collections;
 using System.Text;
 using UnityEngine;
 
-namespace GFW
+namespace Pandora
 {
     public static class GameUtil
     {

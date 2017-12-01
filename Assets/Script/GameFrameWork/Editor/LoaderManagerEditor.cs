@@ -1,4 +1,4 @@
-﻿using GFW;
+﻿using Pandora;
 using UnityEditor;
 using UnityEngine;
 
@@ -51,7 +51,7 @@ public class LoaderManagerEditor : UnityEditor.Editor
         EditorGUILayout.BeginVertical();
         if (_assetDetail)
         {
-            for (int i = 0; i < this._assetCacheDicValue.arraySize; i++)
+            for (int i = 0; i < this._assetCacheDicKey.arraySize; i++)
             {
                 SerializedProperty value = this._assetCacheDicValue.GetArrayElementAtIndex(i);
                 EditorGUILayout.PropertyField(value, true);

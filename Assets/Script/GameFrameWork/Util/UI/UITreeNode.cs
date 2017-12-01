@@ -3,7 +3,7 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace GFW
+namespace Pandora
 {
 
     public class UITreeNode : UIComponentGroup

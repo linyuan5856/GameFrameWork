@@ -1,8 +1,7 @@
 ﻿public static class GameDefine
 {
-
-    public const string PreLoadScene = "PreLoad";
-    public const string TestScene = "TestScene";
+   
+    public const string TemplateScene = "Template";
 
     public const string EDITOR_CONFIG = "config_editor.property";
     public const string RELEASE_CONFIG = "config.property";
@@ -14,7 +13,7 @@
 
     public const string UI_Canvas = "UICanvas";
 
-
+    public const string Widget_UITemplate_Dialog= "UI/Widget_UITemplate_Dialog";
 
 
 

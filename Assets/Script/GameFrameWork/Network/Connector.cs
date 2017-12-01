@@ -22,7 +22,7 @@
 
 using System;
 
-namespace GFW
+namespace Pandora
 {
 
     public abstract class Connector
