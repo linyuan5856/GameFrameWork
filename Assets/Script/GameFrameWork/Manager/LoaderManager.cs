@@ -288,7 +288,7 @@ namespace Pandora
             this.abDownLoader.onCompleteEvent.AddListener(this.OnAbLoadComplete);
             this.abDownLoader.onLoadEvent.AddListener(this.OnLoadingAb);
             foreach (PreLoadSourceInfo si in PreLoadAssetCatalog.AssetBundleList)
-            {
+            {               
                 abDownLoader.DownLoadAB(si.AssetName, si);
             }
         }
@@ -298,21 +298,21 @@ namespace Pandora
               PreLoadSourceInfo info = (PreLoadSourceInfo)extraParam;
 
             _logProgressDict[info.AssetName] = progress;
-            //if (_logProgressDict.ContainsKey(info.AssetName))
-            //{
-                
-            //}
-
+           
             // GameLogger.Log(string.Format("Load Bundle Name--<{0}  ... Progress --> {1}",info.AssetName,progress));
         }
-        Dictionary<string,float>_logProgressDict=new Dictionary<string, float>();
 
+        Dictionary<string,float>_logProgressDict=new Dictionary<string, float>();//todo  GUILog
+        GUIStyle _guiStyle=new GUIStyle();
         void OnGUI()
         {
+            _guiStyle.fontSize = 30;
+            _guiStyle.fontStyle = FontStyle.Bold;
+            _guiStyle.alignment = TextAnchor.MiddleCenter;
             List<string>hasDoneAbName=new List<string>();
             foreach (var progress in _logProgressDict)
             {
-                GUILayout.TextField("Loading ... "+progress.Key + " --> " + (progress.Value*100).ToString("F1")+"%");
+                GUILayout.TextField("Loading ... "+progress.Key + " --> " + (progress.Value*100).ToString("F1")+"%",_guiStyle);
                 if (Mathf.Approximately(progress.Value,1f))
                 {
                     hasDoneAbName.Add(progress.Key);
@@ -328,15 +328,14 @@ namespace Pandora
         private void OnAbLoadComplete(AssetBundle ab, AssetBundleDownLoader.EResult result, System.Object _param)
         {
             abLoadedCount++;
-            PreLoadSourceInfo preLoadSourceInfo = (PreLoadSourceInfo)_param;
+          
             //Logger.LogTest(string.Format("DonwLoad {0} Complete Count -->{1}",preLoadSourceInfo.AssetName,abLoadedCount));
 
             if (result == AssetBundleDownLoader.EResult.Success)
             {
-                //if (!this.bundleDict.ContainsKey(preLoadSourceInfo.AssetName))
-                //{
+                PreLoadSourceInfo preLoadSourceInfo = (PreLoadSourceInfo)_param;
                 this._abDict[preLoadSourceInfo.AssetName] = ab;
-                //}
+                
 
                 if (abLoadedCount == PreLoadAssetCatalog.AssetBundleList.Count)
                 {
@@ -361,7 +360,8 @@ namespace Pandora
             else
             {
                 abLoadedError++;
-            }
+
+            }          
         }
 
         //*******预载游戏资源 ***********//
