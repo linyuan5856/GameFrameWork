@@ -21,7 +21,7 @@ namespace Pandora
 #if UNITY_ANDROID
              if (level >= LEVEL_LOG)
             {
-                if (LogTcpManager.Instance != null)
+                if (LogTcpManager.IsInit())
                     LogTcpManager.Instance.AddLog(message);
             }
 #endif
@@ -58,11 +58,11 @@ namespace Pandora
             long nowTime = DateTime.Now.Ticks / 10000; //ms
             long offsetTime = lastLogTime > 0 ? nowTime - lastLogTime : 0;
             lastLogTime = nowTime;
-#if UNITY_ANDROID
+#if !UNITY_ANDROID
              StackTrace st = new StackTrace(true);
             UnityEngine.Debug.LogError("[" + offsetTime + "]-->" + message + st.ToString());
-            return;
-#endif         
+#endif
+
             UnityEngine.Debug.LogError("[" + offsetTime + "]-->" + message);
         }
 

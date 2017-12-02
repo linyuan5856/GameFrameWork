@@ -22,8 +22,14 @@ namespace Pandora
             }
         }
 
-        void Awake()
+        public static bool IsInit()
         {
+            return m_Instance != null;
+        }
+
+        protected override void OnAwake()
+        {
+            base.OnAwake();
             if (m_Instance == null)
             {
                 m_Instance = this as T;

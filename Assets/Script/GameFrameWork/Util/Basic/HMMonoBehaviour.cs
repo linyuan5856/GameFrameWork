@@ -6,14 +6,23 @@ namespace Pandora
 {
     public class HMMonoBehaviour : MonoBehaviour
     {
+        void Awake()
+        {          
+            GameUpdateRunner.Register(this);
+            OnAwake();
+        }
 
-        // Update is called once per frame
-        void Update()
+        public void UpdateMono()
         {
             this.OnUpdate();
         }
 
         protected virtual void OnUpdate()
+        {
+
+        }
+
+        protected virtual void OnAwake()
         {
 
         }

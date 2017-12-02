@@ -7,18 +7,14 @@ namespace Pandora
 {
     public static class GameUtil
     {
-        public static void StartCoroutine(IEnumerator enumerator)
-        {
-            MainGame.Instance.StartCoroutine(enumerator);
-        }
-
+       
         public static String GetDeviceId()
         {
             String deviceId = PlayerPrefs.GetString("New_deviceUniqueIdentifier", string.Empty);
             if (string.IsNullOrEmpty(deviceId))
             {
 #if UNITY_ANDROID && !UNITY_EDITOR
-		deviceId = activity.Call<String>("GetDeviceId");
+		//deviceId = activity.Call<String>("GetDeviceId"); todo
 #else
                 deviceId = SystemInfo.deviceUniqueIdentifier + ":" + DateTime.Now.Ticks;
 #endif
@@ -39,7 +35,6 @@ namespace Pandora
             go.SetParent(parent);         
             return go.AddComponent<T>();
         }
-
 
         public static void SetRenderQueue(GameObject go, int number)
         {

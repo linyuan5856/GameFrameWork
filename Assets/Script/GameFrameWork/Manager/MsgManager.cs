@@ -7,7 +7,7 @@ namespace Pandora
     {
         private Dictionary<int, Action<Packet>> messageProcessor = new Dictionary<int, Action<Packet>>();
 
-        public void Regist()
+        public void Init()
         {
 
         }
@@ -52,8 +52,6 @@ namespace Pandora
         }
 
 
-
-        //协议号 缓存功能组件脚本 收到协议后进行回调
         private Dictionary<short, IMsgCallBack> SeverPack__Dictionary = new Dictionary<short, IMsgCallBack>();
 
         public void AddMsgCallBack(short msg, IMsgCallBack icallback)

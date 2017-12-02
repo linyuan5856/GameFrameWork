@@ -25,7 +25,7 @@ namespace Pandora
             SeverVersion = int.Parse(serverVersionDict["Version"]);
         }
 
-        public string getBundleMd5(string name)
+        public string GetBundleMd5(string name)
         {
             return serverVersionDict[name];
         }
@@ -49,7 +49,7 @@ namespace Pandora
 
             if (string.IsNullOrEmpty(pathUrl))
             {
-                pathUrl = GameConfigPVO.Instance.getCDNBundleUrl();
+                pathUrl = GameConfigPVO.Instance.GetCdnBundleUrl();
             }
 
             pathUrl += "/" + name + "_" + serverMd5 + ".bundle";
@@ -71,6 +71,4 @@ namespace Pandora
             return mPathUrl;
         }
     }
-
-
 }

@@ -24,7 +24,7 @@ namespace Pandora
         {
             base.Init();
             mTcpName = "log_conn";
-
+            
             //clientId = GameUtil.GetDeviceId();
             //deviceModel = SystemInfo.deviceModel;
             //screenSize = Screen.currentResolution.width + "x" + Screen.currentResolution.height;

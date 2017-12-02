@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using UnityEditor;
+
 using UnityEngine;
 using UnityEngine.Events;
-using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 using Object = UnityEngine.Object;
 
@@ -28,10 +26,10 @@ namespace Pandora
         Effect,
         AssetBundle,
     }
-    [Serializable]
+   
     public class LoaderManager : MonoSingleton<LoaderManager>, ISerializationCallbackReceiver
     {
-#if UNITY_EDITOR
+
         #region 序列化
         [SerializeField]
         List<string> _assetkey = new List<string>();
@@ -79,7 +77,7 @@ namespace Pandora
 
         }
         #endregion
-#endif
+
         [Serializable]
         class CacheAssetInfo
         {
@@ -106,12 +104,7 @@ namespace Pandora
         private Dictionary<string, Object> _tableDict = new Dictionary<string, Object>();
         private Dictionary<string, AssetBundle> _abDict = new Dictionary<string, AssetBundle>();
 
-        private int abLoadedCount = 0;
-        private int abLoadedError = 0;
-        private Action _afterAbLoaded;
-
-        private int assetLoadedCount = 0;
-        private Action _afterPreAssetLoaded;
+      
 
         #region 加载 读取 Table
         public Object LoadTable(string tableName, AssetBundle ab = null, string key = "ID")
@@ -128,7 +121,7 @@ namespace Pandora
             }
 
 #if UNITY_EDITOR
-            asset = AssetDatabase.LoadAssetAtPath<ScriptableObject>(String.Format(GameDefine.TABLE_PATH, tableName));
+            asset = UnityEditor.AssetDatabase.LoadAssetAtPath<ScriptableObject>(String.Format(GameDefine.TABLE_PATH, tableName));
             asset = Object.Instantiate(asset);//编辑下下直接修改数值会被编辑器保存
 #endif
 
@@ -266,6 +259,15 @@ namespace Pandora
         #endregion
 
         #region 登陆游戏预加载
+        private int abLoadedCount = 0;
+        private int abLoadedError = 0;
+
+        private int assetLoadedCount = 0;
+        private Action _afterAbLoaded;
+        private Action _afterPreAssetLoaded;
+        private Action _afterTableLoaded;
+
+        //*******预载AssetBundle ***********//
         public void PreLoadGameAssetBundles(Action onComplete)
         {
             GameLogger.Log("Begin Load AssetBundles");
@@ -277,12 +279,13 @@ namespace Pandora
             {
                 PreLoadAssetCatalog.AssetBundleList.Add(new PreLoadSourceInfo("configs", AssetType.AssetBundle));
             }
-#else
-            PreLoadAssetCatalog.AssetBundleList.Add(new PreLoadAssetCatalog.PreLoadSourceInfo("configs", AssetType.AssetBundle));
+#else      
+            PreLoadAssetCatalog.AssetBundleList.Add(new PreLoadSourceInfo("configs", AssetType.AssetBundle));
 #endif
+
             abLoadedCount = 0;
             abLoadedError = 0;
-            this.abDownLoader.onCompleteEvent.AddListener(this.OnABComplete);
+            this.abDownLoader.onCompleteEvent.AddListener(this.OnAbLoadComplete);
             this.abDownLoader.onLoadEvent.AddListener(this.OnLoadingAb);
             foreach (PreLoadSourceInfo si in PreLoadAssetCatalog.AssetBundleList)
             {
@@ -290,40 +293,39 @@ namespace Pandora
             }
         }
 
-        public void PreLoadGameAssets(Action callback)
+        private void OnLoadingAb(float progress, System.Object extraParam)
         {
-            GameLogger.Log("Begin Load PreLoadAsset");
-            this._afterPreAssetLoaded = callback;
-            if (PreLoadAssetCatalog.AssetList.Count == 0 && this._afterPreAssetLoaded != null)
-            {
-                _afterPreAssetLoaded();
-                _afterPreAssetLoaded = null;
-            }
+              PreLoadSourceInfo info = (PreLoadSourceInfo)extraParam;
 
-            for (int i = 0; i < PreLoadAssetCatalog.AssetList.Count; i++)
-            {
-                PreLoadSourceInfo preLoadSourceInfo = PreLoadAssetCatalog.AssetList[i];
-                LoadAssetAsync<GameObject>(preLoadSourceInfo.AssetName, null, preLoadSourceInfo,
-                    OnAssetComplete, null, CacheType.Always);
-            }
+            _logProgressDict[info.AssetName] = progress;
+            //if (_logProgressDict.ContainsKey(info.AssetName))
+            //{
+                
+            //}
+
+            // GameLogger.Log(string.Format("Load Bundle Name--<{0}  ... Progress --> {1}",info.AssetName,progress));
         }
+        Dictionary<string,float>_logProgressDict=new Dictionary<string, float>();
 
-        private void OnAssetComplete(UnityEngine.Object o, object extraParam)
+        void OnGUI()
         {
-            assetLoadedCount++;
-            if (assetLoadedCount == PreLoadAssetCatalog.AssetList.Count)
+            List<string>hasDoneAbName=new List<string>();
+            foreach (var progress in _logProgressDict)
             {
-                GameLogger.Log("Load PreLoadAsset Done");
-                assetLoadedCount = 0;
-                if (_afterPreAssetLoaded != null)
+                GUILayout.TextField("Loading ... "+progress.Key + " --> " + (progress.Value*100).ToString("F1")+"%");
+                if (Mathf.Approximately(progress.Value,1f))
                 {
-                    _afterPreAssetLoaded();
-                    _afterPreAssetLoaded = null;
+                    hasDoneAbName.Add(progress.Key);
                 }
             }
+
+            for (int i = 0; i < hasDoneAbName.Count; i++)
+            {
+                _logProgressDict.Remove(hasDoneAbName[i]);
+            }          
         }
 
-        private void OnABComplete(AssetBundle ab, AssetBundleDownLoader.EResult result, System.Object _param)
+        private void OnAbLoadComplete(AssetBundle ab, AssetBundleDownLoader.EResult result, System.Object _param)
         {
             abLoadedCount++;
             PreLoadSourceInfo preLoadSourceInfo = (PreLoadSourceInfo)_param;
@@ -362,12 +364,72 @@ namespace Pandora
             }
         }
 
-        private void OnLoadingAb(float progress, System.Object extraParam)
+        //*******预载游戏资源 ***********//
+        public void PreLoadGameAssets(Action callback)
         {
-            //  PreLoadSourceInfo info = (PreLoadSourceInfo)extraParam;
+            GameLogger.Log("Begin Load PreLoadAsset");
+            this._afterPreAssetLoaded = callback;
+            if (PreLoadAssetCatalog.AssetList.Count == 0 && this._afterPreAssetLoaded != null)
+            {
+                _afterPreAssetLoaded();
+                _afterPreAssetLoaded = null;
+            }
 
-            // UnityEngine.Debug.LogError(string.Format("Load Bundle Name--<{0}  ... Progress --> {1}",info.AssetName,progress));
+            for (int i = 0; i < PreLoadAssetCatalog.AssetList.Count; i++)
+            {
+                PreLoadSourceInfo preLoadSourceInfo = PreLoadAssetCatalog.AssetList[i];
+                LoadAssetAsync<GameObject>(preLoadSourceInfo.AssetName, null, preLoadSourceInfo,
+                    OnAssetLoadComplete, null, CacheType.Always);
+            }
         }
+
+        private void OnAssetLoadComplete(UnityEngine.Object o, object extraParam)
+        {
+            assetLoadedCount++;
+            if (assetLoadedCount == PreLoadAssetCatalog.AssetList.Count)
+            {
+                GameLogger.Log("Load PreLoadAsset Done");
+                assetLoadedCount = 0;
+                if (_afterPreAssetLoaded != null)
+                {
+                    _afterPreAssetLoaded();
+                    _afterPreAssetLoaded = null;
+                }
+            }
+        }
+
+        //*******预载CSV配置文件 ***********//
+        public void PreLoadTable(Action onComplete)
+        {
+            this._afterTableLoaded = onComplete;
+            StartCoroutine(CO_PreLoadTable());
+        }
+
+        IEnumerator CO_PreLoadTable()
+        {
+            int totalCount = PreLoadAssetCatalog.TableList.Count;
+            for (int i = 0; i < totalCount; i++)
+            {
+                string tableName = PreLoadAssetCatalog.TableList[i];
+                GameLogger.Log("load table:" + tableName);
+                long time = DateTime.Now.Ticks;
+                LoaderManager.Instance.LoadTable(tableName);
+                long costTime = (DateTime.Now.Ticks - time) / 10000;
+                if (costTime > 10)
+                    GameLogger.LogWarn(tableName + " cost time:" + costTime);
+                yield return null;
+            }
+
+            // ConvertUtil.NewCSVToStaticClass((NewCSVFile)LoaderManager.Instance.LoadTable("ActivityBase", "Key"), typeof(CSV_ActivityBase));
+            GameLogger.Log("Load Table Done");
+
+            if (this._afterTableLoaded != null)
+            {
+                this._afterTableLoaded();
+                this._afterTableLoaded = null;
+            }
+        }
+
         #endregion
 
         #region 加载Scene
@@ -446,7 +508,7 @@ namespace Pandora
 
         public static void HttpGetText(string url, Action<string, string> callback)
         {
-            GameUtil.StartCoroutine(http_get_text(url, callback));
+            MainGame.Instance.StartCoroutine(http_get_text(url, callback));
         }
 
         static IEnumerator http_get_text(string url, Action<string, string> callback)
@@ -489,9 +551,7 @@ namespace Pandora
         {
             public string ABName;
             public WWW www = null;
-            public int Retry = 10;
-            public float BeginTick = 0;
-            public int Version;
+            public int Retry = 10;        
             public bool Stop;
             public System.Object ExtraParam;
 
@@ -579,7 +639,6 @@ namespace Pandora
             string url = VersionManager.Instance.GetBundlePath(info.ABName);
             GameLogger.Log("StartDownLoadAB:" + info.ABName + ":" + url);
 
-            info.BeginTick = Time.realtimeSinceStartup;
 
             if (info.www != null)
             {
@@ -587,7 +646,7 @@ namespace Pandora
             }
 
 
-            info.www = WWW.LoadFromCacheOrDownload(url, info.Version);
+            info.www = WWW.LoadFromCacheOrDownload(url,0);
 
             if (info.www == null)
             {

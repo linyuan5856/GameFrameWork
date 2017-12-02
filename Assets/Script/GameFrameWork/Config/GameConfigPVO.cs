@@ -19,7 +19,7 @@ namespace Pandora
 
         public bool EditorUseBundleConfig;
 
-        public string getCDNBundleUrl()
+        public string GetCdnBundleUrl()
         {
              string bundleUrl = cdnUrl + "/AssetBundles/v" + VersionManager.Instance.LocalVersion + "/";
            

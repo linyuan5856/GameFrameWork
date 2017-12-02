@@ -13,8 +13,10 @@ namespace Pandora
 
         private List<AudioSource> audioSourceList = new List<AudioSource>();
 
-        void Awake()
+        protected override void Init()
         {
+            base.Init();
+
             this.audio_bg_source = gameObject.AddComponent<AudioSource>();
             this.audio_btn_source = gameObject.AddComponent<AudioSource>();
             this.audio_run_source = gameObject.AddComponent<AudioSource>();
@@ -80,5 +82,4 @@ namespace Pandora
         }
 
     }
-
 }

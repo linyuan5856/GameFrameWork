@@ -3,18 +3,15 @@ using UnityEngine;
 
 namespace Pandora
 {
-    public class TcpManager : HMMonoBehaviour
-    {
-        public static TcpManager Instance;
-
+    public class TcpManager :MonoSingleton<TcpManager>
+    {     
         protected TcpAsyncConnector mConnector;
         [SerializeField] protected string mTcpName;
 
-
-        void Awake()
+        protected override void Init()
         {
-            Instance = this;
-            mTcpName = "game_connect";       
+            base.Init();
+            mTcpName = "game_connect";
         }
 
         protected override void OnUpdate()

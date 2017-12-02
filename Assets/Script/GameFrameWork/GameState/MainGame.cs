@@ -20,8 +20,7 @@ namespace Pandora
 
        
         void InitGameSetting()
-        {
-            GameLogger.Log("MainGame Init");
+        {          
             DontDestroyOnLoad(this.gameObject);
             Screen.sleepTimeout = SleepTimeout.NeverSleep;
             Screen.orientation = ScreenOrientation.Landscape;
@@ -35,13 +34,15 @@ namespace Pandora
 
         void InitGameManager()
         {
-            GameObject mainGo = MainGame.Instance.gameObject;
+            GameObject mainGo = Instance.gameObject;
+            GameUtil.AddComponentToP<GameUpdateRunner>(mainGo);
             GameUtil.AddComponentToP<LoaderManager>(mainGo);
             GameUtil.AddComponentToP<AudioManager>(mainGo);
             GameUtil.AddComponentToP<TcpManager>(mainGo);
             GameUtil.AddComponentToP<ChatTcpManager>(mainGo);
             GameUtil.AddComponentToP<TimerManager>(mainGo);
             GameUtil.AddComponentToP<UIManager>(mainGo);
+            MsgManager.Instance.Init();
         }
 
         void InitGameState()
@@ -53,9 +54,9 @@ namespace Pandora
             Instance.ChangeState<PreLoadState>();
         }
 
-
-        void Update()
+        protected override void OnUpdate()
         {
+            base.OnUpdate();
             stateMachine.OnUpdate();
         }
 

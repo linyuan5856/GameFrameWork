@@ -14,10 +14,10 @@ namespace Pandora
         {
             base.OnInitStage();
 
-            this.LoadGameConfig();
+            this.LoadGameLocalConfig();
         }
-    
-        void LoadGameConfig()
+
+        void LoadGameLocalConfig()
         {
             string configPath = GameConfigPVO.Instance.GetGameConfigPath();
             LoaderManager.HttpGetText(configPath, (text, error) =>
@@ -36,15 +36,13 @@ namespace Pandora
         }
 
         void InitExtraGameManager()
-        {      
+        {
             GameObject mainGo = MainGame.Instance.gameObject;
 
             if (GameConfigPVO.Instance.useRemoteLog)
                 GameUtil.AddComponentToP<LogTcpManager>(mainGo);
             if (GameConfigPVO.Instance.usePerformance)
                 GameUtil.AddComponentToP<Performance>(mainGo);
-
-            MsgManager.Instance.Regist();
 
             GameLogger.Log("Extra Manager  Init OK");
         }
@@ -64,10 +62,10 @@ namespace Pandora
                     GameLogger.LogError("LoadLocalVersion Error:" + error);
                 }
                 else
-                {                
+                {
                     VersionManager.Instance.SetLocalVersion(text);
                     this.LoadServerVersion();
-                    GameLogger.Log(string.Format("LocalVersion:-->{0} \n Bundle Path:-->{1}", VersionManager.Instance.LocalVersion, GameConfigPVO.Instance.getCDNBundleUrl()));          
+                    GameLogger.Log(string.Format("LocalVersion:-->{0} \n Bundle Path:-->{1}", VersionManager.Instance.LocalVersion, GameConfigPVO.Instance.GetCdnBundleUrl()));
                 }
             });
 
@@ -75,7 +73,7 @@ namespace Pandora
 
         void LoadServerVersion()
         {
-            string path = GameUtil.AddString(GameConfigPVO.Instance.getCDNBundleUrl(), GameDefine.VERSIONTXT, "?r=", UnityEngine.Random.Range(0, 9999999));
+            string path = GameUtil.AddString(GameConfigPVO.Instance.GetCdnBundleUrl(), GameDefine.VERSIONTXT, "?r=", UnityEngine.Random.Range(0, 9999999));
 
             LoaderManager.HttpGetText(path, (text, error) =>
             {
@@ -101,6 +99,7 @@ namespace Pandora
             if (VersionManager.Instance.LocalVersion != VersionManager.Instance.SeverVersion)
             {
                 GameLogger.Log(string.Format("服务器 与 本地版本号不同 Sever -->{0}  .. Client-->{1}", VersionManager.Instance.SeverVersion, VersionManager.Instance.LocalVersion));
+                //todo  版本不同的回调
             }
             else
             {
@@ -108,36 +107,38 @@ namespace Pandora
             }
 
             GameLogger.Log("版本检测通过 开始读取服务器列表");
-            string url = GameConfigPVO.Instance.getCDNBundleUrl();
-            LoaderManager.HttpGetText(url + "/ServerList.csv?" + UnityEngine.Random.Range(0, 9999999), (txt, err) =>
-            {
-                if (!string.IsNullOrEmpty(err))
-                {
-                    Debug.LogError("Load SeverList Error :" + err);
-                    return;
-                }
+            string url = GameConfigPVO.Instance.GetCdnBundleUrl();
+            LoaderManager.HttpGetText(GameUtil.AddString(url, GameDefine.SEVERLISTTXT, UnityEngine.Random.Range(0, 9999999)), (txt, err) =>
+             {
+                 if (!string.IsNullOrEmpty(err))
+                 {
+                     Debug.LogError("Load SeverList Error :" + err);
+                     return;
+                 }
 
 
-                CSVFile csvFile = ConvertUtil.ToNewCSVFile(txt);
-                csvFile.InitTable("ID");
-                for (int ID = 1; ID <= csvFile.Count; ID++)
-                {//读表初始化服务器集合
+                 CSVFile csvFile = ConvertUtil.ToNewCSVFile(txt);
+                 csvFile.InitTable("ID");
+                 for (int ID = 1; ID <= csvFile.Count; ID++)
+                 {//读表初始化服务器集合
 
-                    if (!csvFile.ContainsKey(ID.ToString()))
-                        continue;
-                    CSVRow row = csvFile.GetRowByKey(ID.ToString());
+                     if (!csvFile.ContainsKey(ID.ToString()))
+                         continue;
+                     CSVRow row = csvFile.GetRowByKey(ID.ToString());
+#if UNITY_EDITOR
+                     StringBuilder sb = new StringBuilder();
+                     for (int i = 0; i < row.rowArr.Length; i++)
+                     {
+                         sb.Append(row.rowArr[i].ToString()).Append("|");
 
-                    StringBuilder sb = new StringBuilder();//todo
-                    for (int i = 0; i < row.rowArr.Length; i++)
-                    {
-                        sb.Append(row.rowArr[i].ToString()).Append("|");
+                     }
+                     GameLogger.LogWarn(sb.ToString());
+#endif
 
-                    }
-                    GameLogger.LogWarn(sb.ToString());
-                }
+                 }
 
-                this.DownLoadAssetBundles();
-            });
+                 this.DownLoadAssetBundles();
+             });
         }
 
         void DownLoadAssetBundles()
@@ -147,27 +148,7 @@ namespace Pandora
 
         void DownLoadCSV_Table()
         {
-            GameUtil.StartCoroutine(CO_LoadTable());
-        }
-
-        IEnumerator CO_LoadTable()
-        {
-            int totalCount = PreLoadAssetCatalog.TableList.Count;
-            for (int i = 0; i < totalCount; i++)
-            {
-                string tableName = PreLoadAssetCatalog.TableList[i];
-                GameLogger.Log("load table:" + tableName);
-                long time = DateTime.Now.Ticks;
-                LoaderManager.Instance.LoadTable(tableName);
-                long costTime = (DateTime.Now.Ticks - time) / 10000;
-                if (costTime > 10)
-                    GameLogger.LogWarn(tableName + " cost time:" + costTime);
-                yield return null;
-            }
-
-            // ConvertUtil.NewCSVToStaticClass((NewCSVFile)LoaderManager.Instance.LoadTable("ActivityBase", "Key"), typeof(CSV_ActivityBase));
-            GameLogger.Log("Load Table Done");
-            StartLoadAsset();
+            LoaderManager.Instance.PreLoadTable(this.StartLoadAsset);
         }
 
         void StartLoadAsset()
