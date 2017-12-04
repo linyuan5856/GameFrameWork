@@ -19,7 +19,7 @@ public class UI_Template : UIWindow
     [SerializeField] private InputField input_dialog;
     [SerializeField] private UIToggle toggle_left;
     [SerializeField] private UIToggle toggle_right;
-
+    
     private bool m_IsClosed;
     [SerializeField]
     private Vector3 m_PosR;
@@ -28,8 +28,7 @@ public class UI_Template : UIWindow
 
     protected override void OnInitWindow()
     {
-        base.OnInitWindow();
-
+        base.OnInitWindow();     
         this.text_name.text = SLIDERDES;     
 
         this.slider_changeBg.minValue = MININDEX;
@@ -125,11 +124,11 @@ public class UI_Template : UIWindow
         if (m_IsClosed)
         {
             if (GUI.Button(
-                new Rect(Screen.width * 0.1f, Screen.height * 0.2f, Screen.width * 0.1f, Screen.height * 0.1f),
+                new Rect(Screen.width * 0.1f, Screen.height * 0.2f, Screen.width * 0.2f, Screen.height * 0.1f),
                 "再次打开界面"))
             {
                 UIManager.Instance.OpenWindow<UI_Template>();
-            }
+            }         
         }
     }
 }

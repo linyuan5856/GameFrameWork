@@ -272,6 +272,15 @@ namespace Pandora
         {
             GameLogger.Log("Begin Load AssetBundles");
 
+            if (PreLoadAssetCatalog.AssetBundleList.Count==0)
+            {
+                if (onComplete!=null)
+                {
+                    onComplete();
+                }
+                return;
+            }
+
             this._afterAbLoaded = onComplete;
 
 #if UNITY_EDITOR
@@ -433,7 +442,6 @@ namespace Pandora
         #endregion
 
         #region 加载Scene
-
         private string _loadSceneName;
         private Action _loadSceneComplete;
         private Action<float> _loadingScene;
@@ -450,6 +458,7 @@ namespace Pandora
             GameLogger.LogWarn(string.Format("Load Scene --> {0}", _loadSceneName));
 
             AsyncOperation ao = SceneManager.LoadSceneAsync(_loadSceneName);
+            
             if (ao != null)
             {
                 ao.allowSceneActivation = false;
@@ -475,8 +484,7 @@ namespace Pandora
                 _loadingScene = null;
                 _loadSceneComplete = null;
             }
-        }
-
+        }      
         #endregion
 
         bool HasLoadedAb(string abName)

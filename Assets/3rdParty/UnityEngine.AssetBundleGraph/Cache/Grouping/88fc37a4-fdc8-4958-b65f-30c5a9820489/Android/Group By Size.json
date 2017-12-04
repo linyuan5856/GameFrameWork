@@ -1,0 +1,75 @@
+﻿{
+    "m_groups": [
+        {
+            "name": "0",
+            "assets": [
+                "Assets/Demo/AssetSource/Background/CircleFrame_red.png",
+                "Assets/Demo/AssetSource/Background/Flip_bright.png",
+                "Assets/Demo/AssetSource/Background/Flip_dark.png",
+                "Assets/Demo/AssetSource/Background/Frame_Button_close.png",
+                "Assets/Demo/AssetSource/Background/Frame_Button_confirm.png",
+                "Assets/Demo/AssetSource/LoadingBg/Loading_Adolph.png"
+            ]
+        },
+        {
+            "name": "1",
+            "assets": [
+                "Assets/Demo/AssetSource/LoadingBg/Loading_Caesar.png"
+            ]
+        },
+        {
+            "name": "2",
+            "assets": [
+                "Assets/Demo/AssetSource/LoadingBg/Loading_Cedric.png"
+            ]
+        },
+        {
+            "name": "3",
+            "assets": [
+                "Assets/Demo/AssetSource/LoadingBg/Loading_Dennis.png"
+            ]
+        },
+        {
+            "name": "4",
+            "assets": [
+                "Assets/Demo/AssetSource/LoadingBg/Loading_Elizabeth.png"
+            ]
+        },
+        {
+            "name": "5",
+            "assets": [
+                "Assets/Demo/AssetSource/LoadingBg/Loading_Ives.png"
+            ]
+        },
+        {
+            "name": "6",
+            "assets": [
+                "Assets/Demo/AssetSource/LoadingBg/Loading_Keith.png"
+            ]
+        },
+        {
+            "name": "7",
+            "assets": [
+                "Assets/Demo/AssetSource/LoadingBg/Loading_Leif.png"
+            ]
+        },
+        {
+            "name": "8",
+            "assets": [
+                "Assets/Demo/AssetSource/LoadingBg/Loading_Main.png"
+            ]
+        },
+        {
+            "name": "9",
+            "assets": [
+                "Assets/Demo/AssetSource/LoadingBg/Loading_Orville.png"
+            ]
+        },
+        {
+            "name": "10",
+            "assets": [
+                "Assets/Demo/AssetSource/LoadingBg/Loading_Will.png"
+            ]
+        }
+    ]
+}
