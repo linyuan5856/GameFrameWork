@@ -7,6 +7,8 @@
 
 # Visual Studio 2015 cache directory
 /.vs/
+# visual studio code
+/.vscode/
 # NoGit Document
 /Assets/3rdParty/NoGit/
 /Assets/3rdParty/NoGit.meta
