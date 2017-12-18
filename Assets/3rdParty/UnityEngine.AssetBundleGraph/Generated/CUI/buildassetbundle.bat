@@ -1,1 +1,0 @@
-"F:\Unity\Unity5.6.4\Editor\Unity.exe" -batchmode -quit -projectPath "F:/CompanyProject/GameFrameWork/FrameWork/" -logFile abbuild.log -executeMethod UnityEngine.AssetBundles.GraphTool.CUIUtility.BuildFromCommandline %1 %2 %3 %4 %5 %6 %7 %8 %9
