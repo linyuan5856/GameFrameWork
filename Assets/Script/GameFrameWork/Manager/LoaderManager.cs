@@ -560,7 +560,7 @@ namespace Pandora
             public string ABName;
             public WWW www = null;
             public int Retry = 10;        
-            public bool Stop;
+            //public bool Stop;
             public System.Object ExtraParam;
 
             public ABDownloadInfo(string abName, System.Object extraParam)
@@ -587,12 +587,12 @@ namespace Pandora
             for (int i = 0; i < processingDownloads.Count;)
             {
                 ABDownloadInfo info = processingDownloads[i];
-                if (info.Stop)
-                {
-                    processingDownloads.Remove(info);
-                    DownLoadStop(info);
-                    continue;
-                }
+//                if (info.Stop)
+//                {
+//                    processingDownloads.Remove(info);
+//                    DownLoadStop(info);
+//                    continue;
+//                }
 
                 if (!string.IsNullOrEmpty(info.www.error))
                 {

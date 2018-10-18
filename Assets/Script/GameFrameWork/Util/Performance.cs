@@ -45,9 +45,9 @@ public class Performance : MonoBehaviour {
         GUI.Label(new Rect(0, temp, 300, 20),
             new GUIContent("Memory: " + total + " MB"), style);
         temp += 20;
-   
-        GUI.Label(new Rect(0, temp, 300, 20),
-            new GUIContent("Cache: " + Caching.spaceOccupied/ M + " MB/" + Caching.maximumAvailableDiskSpace / 1048576 +" MB"),
-            style);
+  
+//        GUI.Label(new Rect(0, temp, 300, 20),
+//            new GUIContent("Cache: " + Caching.spaceOccupied/ M + " MB/" + Caching.maximumAvailableDiskSpace / 1048576 +" MB"),
+//            style);
     }
 }

@@ -17,7 +17,7 @@ namespace Pandora
         [MenuItem("program/Build/CleanCache")]
         private static void CleanBundleCache()
         {
-            Caching.CleanCache();
+            Caching.ClearCache();
         }
 
         [MenuItem("program/GameObject/ShowPath", false, 10)]

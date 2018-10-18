@@ -26,8 +26,7 @@ namespace Pandora
             Screen.orientation = ScreenOrientation.Landscape;
             Screen.autorotateToLandscapeLeft = true;
             Screen.autorotateToLandscapeRight = true;
-            QualitySettings.vSyncCount = 0;
-            Caching.maximumAvailableDiskSpace = 600 * 1024 * 1024;
+            QualitySettings.vSyncCount = 0;  
             Instance.SetGameFrame(LowFrame);
 
         }
