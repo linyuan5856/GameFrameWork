@@ -5,12 +5,19 @@ namespace GameFrameWork
 {
     public abstract class BaseService : IService
     {
-        public virtual void Create()
+        private EventDispatcher<int, object> _eventDispatcher;
+        private IFacade _facade;
+
+        void IService.Create(IFacade facade)
         {
+            _facade = facade;
+            OnCreate();
         }
 
-        public virtual void Release()
+        void IService.Release()
         {
+            OnRelease();
+            _facade = null;
             _eventDispatcher?.ClearEvent();
             _eventDispatcher = null;
 #if UNITY_EDITOR
@@ -18,16 +25,36 @@ namespace GameFrameWork
 #endif
         }
 
-        public virtual void DoUpdate(float deltaTime)
+        void IService.DoUpdate(float deltaTime)
+        {
+            OnUpdate(deltaTime);
+        }
+
+        void IService.OnApplicationQuit()
+        {
+            OnApplicationQuit();
+        }
+
+        protected virtual void OnCreate()
         {
         }
 
-        public virtual void OnApplicationQuit()
+        protected virtual void OnRelease()
         {
         }
 
+        protected virtual void OnUpdate(float deltaTime)
+        {
+        }
 
-        private EventDispatcher<int, object> _eventDispatcher;
+        protected virtual void OnApplicationQuit()
+        {
+        }
+
+        protected IFacade GetFacade()
+        {
+            return _facade;
+        }
 
         private EventDispatcher<int, object> GetDispatcher()
         {

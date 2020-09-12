@@ -3,22 +3,25 @@ using UnityEngine;
 
 namespace GameFrameWork
 {
-    public class ServiceLocate : Singleton<ServiceLocate>, IService
+    public class ServiceLocate
     {
-        private MapList<Type, IService> map;
-        private bool isInit;
+        private readonly MapList<Type, IService> _map;
+        private bool _isInit;
+        private readonly IFacade _facade;
 
-        public void Create()
+        public ServiceLocate(IFacade facade)
         {
-            if (map == null)
-                map = new MapList<Type, IService>();
+            _facade = facade;
+            if (_map == null)
+                _map = new MapList<Type, IService>();
         }
 
         public void CreateAllServices()
         {
-            if (!isInit)
-                ForEachService(service => service.Create());
-            isInit = true;
+            if (_isInit)
+                return;
+            ForEachService(service => service.Create(_facade));
+            _isInit = true;
         }
 
         public void DoUpdate(float deltaTime)
@@ -35,25 +38,25 @@ namespace GameFrameWork
         public void Release()
         {
             ForEachService(service => service.Release());
-            isInit = false;
+            _isInit = false;
         }
 
 
         public T RegisterService<T>() where T : class, IService
         {
             Type type = typeof(T);
-            if (map.ContainsKey(type))
-                return map[type] as T;
+            if (_map.ContainsKey(type))
+                return _map[type] as T;
 
             var service = Activator.CreateInstance<T>();
-            map.Add(type, service);
+            _map.Add(type, service);
             return service;
         }
 
         public T RegisterServiceAutoCreate<T>() where T : class, IService
         {
             var service = RegisterService<T>();
-            service.Create();
+            service.Create(_facade);
             return service;
         }
 
@@ -63,28 +66,28 @@ namespace GameFrameWork
             if (TryGetService(out T t))
             {
                 t.Release();
-                map.Remove(type);
+                _map.Remove(type);
             }
         }
 
 
-        public T GetService<T>() where T : class, IService
+        public T GetService<T>() where T : IService
         {
             Type type = typeof(T);
-            return Internal_GetService(type) as T;
+            return (T) Internal_GetService(type);
         }
 
-        public bool TryGetService<T>(out T t) where T : class, IService
+        public bool TryGetService<T>(out T t) where T : IService
         {
             Type type = typeof(T);
-            t = Internal_GetService(type, false) as T;
+            t = (T) Internal_GetService(type, false);
             return t != null;
         }
 
         private IService Internal_GetService(Type type, bool isDebug = true)
         {
-            if (map.ContainsKey(type))
-                return map[type];
+            if (_map.ContainsKey(type))
+                return _map[type];
             if (isDebug)
                 Debuger.LogWarning($"{type} Service 尚未注册");
             return null;
@@ -92,12 +95,9 @@ namespace GameFrameWork
 
         void ForEachService(Action<IService> ac)
         {
-            var list = map.AsList();
-            for (int i = 0; i < list.Count; i++)
-            {
-                var service = list[i];
+            var list = _map.AsList();
+            foreach (var service in list)
                 ac(service);
-            }
         }
     }
 }

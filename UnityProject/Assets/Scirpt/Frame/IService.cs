@@ -2,8 +2,7 @@
 {
     public interface IService
     {
-        void Create();
-
+        void Create(IFacade facade);
         void Release();
 
         void DoUpdate(float deltaTime);

@@ -15,25 +15,25 @@ public partial class LoaderService : BaseService
     private readonly SceneLoader _sceneLoader = new SceneLoader();
     private readonly AssetLoader _assetLoader = new AssetLoader();
 
-    public override void Create()
+    protected override void OnCreate()
     {
-        base.Create();
+        base.OnCreate();
         _sceneLoader.RegisterSceneCallBack();
         SpriteAtlasManager.atlasRequested += OnAtlasRequested;
     }
 
-    public override void Release()
+    protected override void OnRelease()
     {
-        base.Release();
+        base.OnRelease();
         _assetLoader.Release();
         _sceneLoader.Release();
         _sceneLoader.UnRegisterSceneCallBack();
         SpriteAtlasManager.atlasRequested -= OnAtlasRequested;
     }
 
-    public override void DoUpdate(float deltaTime)
+    protected override void OnUpdate(float deltaTime)
     {
-        base.DoUpdate(deltaTime);
+        base.OnUpdate(deltaTime);
         _sceneLoader.DoUpdate();
         _assetLoader.DoUpdate();
     }

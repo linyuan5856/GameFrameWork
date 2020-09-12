@@ -124,10 +124,10 @@ public class TimerService : BaseService
         return identifyId;
     }
 
-    public override void Release()
+    protected override void OnRelease()
     {
-        base.Release();
-        this._timeMap.Clear();
+        base.OnRelease();
+        _timeMap.Clear();
         willDeleteTimerList.Clear();
     }
 
@@ -194,9 +194,9 @@ public class TimerService : BaseService
 
     private readonly List<int> willDeleteTimerList = new List<int>();
 
-    public override void DoUpdate(float deltaTime)
+    protected override void OnUpdate(float deltaTime)
     {
-        base.DoUpdate(deltaTime);
+        base.OnUpdate(deltaTime);
 
         unscaleCurrentTime += Time.unscaledDeltaTime;
         tempTimeUnScaled += Time.unscaledDeltaTime;

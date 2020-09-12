@@ -7,11 +7,32 @@ using UnityEngine.UI;
 
 namespace GameFrameWork
 {
-    public class UIService : BaseService
+    public interface IUiServiceContext
     {
-        public override void Create()
+        UIWindow CreateWindow(string ui);
+    }
+
+    public class UiServiceContext : IUiServiceContext
+    {
+        private LoaderService _loader;
+        private readonly Facade _facade;
+
+        public UiServiceContext(Facade facade)
         {
-            base.Create();
+            _facade = facade;
+        }
+
+        private Canvas _canvas;
+        private Canvas _msgCanvas;
+        private Canvas _spaceCanvas;
+        private Transform _hud;
+        private GameObject _cacheRootCanvas;
+        public Canvas Canvas => _canvas;
+        public Canvas MsgCanvas => _msgCanvas;
+        public Transform Hud => _hud;
+
+        public void Create()
+        {
             if (_cacheRootCanvas == null)
             {
                 _cacheRootCanvas = (GameObject) UnityEngine.Object.Instantiate(Resources.Load("UI/UIRoot"));
@@ -25,24 +46,36 @@ namespace GameFrameWork
             }
         }
 
+        private LoaderService GetLoader()
+        {
+            return _loader ?? (_loader = _facade.GetService<LoaderService>());
+        }
+
+        public UIWindow CreateWindow(string ui)
+        {
+            string path = "UI/" + ui;
+            GameObject go = GetLoader().Instantiate(path, _canvas.transform, false);
+            go.name = ui;
+            return go.GetComponent<UIWindow>();
+        }
+    }
+
+    public class UIService : BaseService
+    {
         private const int OPEN_EVENT = 0;
         private const int CLOSE_EVENT = 1;
 
-        private readonly Dictionary<string, GameObject> _uiCacheDict = new Dictionary<string, GameObject>();
+        private IUiServiceContext _context;
+        private readonly Dictionary<string, UIWindow> _uiCacheDict = new Dictionary<string, UIWindow>();
         private readonly Dictionary<string, Boolean> _loadingUiDict = new Dictionary<string, bool>();
         private readonly List<UIWindow> _openedUiList = new List<UIWindow>();
+
         private readonly EventDispatcher<int, object> _eventDispatcher = new EventDispatcher<int, object>();
-        private Canvas _canvas;
-        private Canvas _msgCanvas;
-        private Canvas _spaceCanvas;
-        private Transform _hud;
-        private GameObject _cacheRootCanvas;
-        public Canvas Canvas => _canvas;
 
-        public Canvas MsgCanvas => _msgCanvas;
-
-        public Transform Hud => _hud;
-
+        public void SetContext(IUiServiceContext context)
+        {
+            _context = context;
+        }
 
         public void AddOpenListener(Action<object> callback)
         {
@@ -148,42 +181,39 @@ namespace GameFrameWork
                     }
                 }
 
-                uiHistory.AddHistoryNode(node);
+                _uiHistory.AddHistoryNode(node);
             }
         }
 
-        private void InternalOpenWindowByParam(string uiName, object _param = null)
+        private void InternalOpenWindowByParam(string ui, object param = null)
         {
-            Debuger.Log("OpenWindow:" + uiName);
-            if (_loadingUiDict.ContainsKey(uiName) && _loadingUiDict[uiName])
+            Debuger.Log("OpenWindow:" + ui);
+            if (_loadingUiDict.ContainsKey(ui) && _loadingUiDict[ui])
             {
-                Debuger.LogWarning("ignore repeated ui load:" + uiName);
+                Debuger.LogWarning("ignore repeated ui load:" + ui);
                 return;
             }
 
-            UIWindow openedWindow = FindWindow(uiName);
+            UIWindow openedWindow = FindWindow(ui);
             if (openedWindow != null)
             {
-                Debuger.Log("window opened ,just UpdateWindow:" + uiName);
-                openedWindow.SetParam(_param);
+                Debuger.Log("window opened ,just UpdateWindow:" + ui);
+                openedWindow.SetParam(param);
                 openedWindow.UpdateWindow();
                 return;
             }
 
-            if (_uiCacheDict.ContainsKey(uiName))
+            if (_uiCacheDict.ContainsKey(ui))
             {
-                DirectOpenWindow(uiName, _uiCacheDict[uiName], _param);
+                DirectOpenWindow(_uiCacheDict[ui], param);
                 return;
             }
 
-            _loadingUiDict[uiName] = true;
-            LoaderService loader = ServiceLocate.Instance.GetService<LoaderService>();
-            string path = "UI/" + uiName;
-            GameObject go = loader.Instantiate(path, _canvas.transform, false);
-            _loadingUiDict[uiName] = false;
-            go.name = uiName;
-            _uiCacheDict[uiName] = go;
-            DirectOpenWindow(uiName, go, _param);
+            _loadingUiDict[ui] = true;
+            UIWindow window = _context.CreateWindow(ui);
+            _loadingUiDict[ui] = false;
+            _uiCacheDict[ui] = window;
+            DirectOpenWindow(window, param);
         }
 
         private UIWindow FindWindow(string uiName)
@@ -197,15 +227,13 @@ namespace GameFrameWork
             return null;
         }
 
-        private void DirectOpenWindow(string uiName, GameObject go, object _param)
+        private void DirectOpenWindow(UIWindow window, object param)
         {
-            UIWindow t = go.GetComponent<UIWindow>();
-            Debug.Assert(t != null, "ui script must inherit from UIWindow");
-            t.ActionOpen = OnWindowOpen;
-            t.ActionClose = OnWindowClose;
-            t.InitWindow();
-            t.SetParam(_param);
-            t.OpenWindow();
+            window.ActionOpen = OnWindowOpen;
+            window.ActionClose = OnWindowClose;
+            window.InitWindow();
+            window.SetParam(param);
+            window.OpenWindow();
         }
 
         private void OnWindowOpen(UIWindow window)
@@ -231,13 +259,9 @@ namespace GameFrameWork
 
         private void InternalClose(string uiName)
         {
-            if (!string.IsNullOrEmpty(uiName)
-                && _uiCacheDict.ContainsKey(uiName))
-            {
-                GameObject go = _uiCacheDict[uiName];
-                UIWindow t = go.GetComponent<UIWindow>();
-                t.CloseWindow();
-            }
+            if (string.IsNullOrEmpty(uiName) || !_uiCacheDict.ContainsKey(uiName)) return;
+            UIWindow window = _uiCacheDict[uiName];
+            window.CloseWindow();
         }
 
         private void DestroyWindow<T>()
@@ -246,13 +270,13 @@ namespace GameFrameWork
             DestroyWindow(uiName);
         }
 
-        private void DestroyWindow(string uiName)
+        private void DestroyWindow(string ui)
         {
-            if (_uiCacheDict.ContainsKey(uiName))
+            if (_uiCacheDict.ContainsKey(ui))
             {
-                GameObject go = _uiCacheDict[uiName];
-                _uiCacheDict.Remove(uiName);
-                UnityEngine.Object.DestroyImmediate(go);
+                UIWindow window = _uiCacheDict[ui];
+                _uiCacheDict.Remove(ui);
+                UnityEngine.Object.DestroyImmediate(window.gameObject);
             }
         }
 
@@ -265,9 +289,9 @@ namespace GameFrameWork
             }
         }
 
-        private readonly UiHistory uiHistory = new UiHistory();
+        private readonly UiHistory _uiHistory = new UiHistory();
 
-        private void InternalJumpWindow(string uiName, object _params)
+        private void InternalJumpWindow(string uiName, object @params)
         {
             if (_openedUiList.Count > 0)
             {
@@ -280,12 +304,12 @@ namespace GameFrameWork
                 InternalCloseAllWindow(true, uiName);
             }
 
-            InternalOpenWindowByParam(uiName, _params);
+            InternalOpenWindowByParam(uiName, @params);
         }
 
         private void InternalGoBackWindow(string uiName)
         {
-            HistoryNode node = uiHistory.PopNode(uiName);
+            HistoryNode node = _uiHistory.PopNode(uiName);
 
             InternalClose(uiName);
             if (node != null)
