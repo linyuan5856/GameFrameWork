@@ -23,14 +23,10 @@ namespace GameFrameWork
         }
 
         private Canvas _canvas;
-        private Canvas _msgCanvas;
-        private Canvas _spaceCanvas;
-        private Transform _hud;
+        
         private GameObject _cacheRootCanvas;
         public Canvas Canvas => _canvas;
-        public Canvas MsgCanvas => _msgCanvas;
-        public Transform Hud => _hud;
-
+        
         public void Create()
         {
             if (_cacheRootCanvas == null)
@@ -40,9 +36,6 @@ namespace GameFrameWork
                 UnityEngine.Object.DontDestroyOnLoad(_cacheRootCanvas);
                 _canvas = _cacheRootCanvas.transform.Find("Canvas").GetComponent<Canvas>();
                 _canvas.GetComponent<GraphicRaycaster>().ignoreReversedGraphics = false;
-                _msgCanvas = _cacheRootCanvas.transform.Find("MsgCanvas").GetComponent<Canvas>();
-                _hud = _cacheRootCanvas.transform.Find("Canvas/Huds");
-                _spaceCanvas = _cacheRootCanvas.transform.Find("Canvas_SpaceCamera").GetComponent<Canvas>();
             }
         }
 
