@@ -205,6 +205,11 @@ namespace GameFrameWork
             _loadingUiDict[ui] = true;
             UIWindow window = _context.CreateWindow(ui);
             _loadingUiDict[ui] = false;
+            if (window == null)
+            {
+                Debuger.LogError($"[UI]Load {ui} Done...No UiWindow Script");
+                return;
+            }
             _uiCacheDict[ui] = window;
             DirectOpenWindow(window, param);
         }
