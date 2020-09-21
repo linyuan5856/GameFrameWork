@@ -31,8 +31,8 @@ public class BootStrap : MonoBehaviour
     {
         _locate.DoUpdate(Time.deltaTime);
         
-        if(Input.GetKeyDown(KeyCode.Q))
-            _locate.GetService<UIService>().OpenWindow("UI_Welcome");
+        // if(Input.GetKeyDown(KeyCode.Q))
+        //     _locate.GetService<UIService>().OpenWindow("UI_Welcome");
     }
 
     void OnApplicationQuit()
