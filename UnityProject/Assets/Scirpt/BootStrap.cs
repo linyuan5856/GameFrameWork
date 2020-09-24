@@ -4,35 +4,31 @@ using UnityEngine;
 public class BootStrap : MonoBehaviour
 {
     private ServiceLocate _locate;
+    private Facade _facade;
 
-    // Start is called before the first frame update
     void Start()
     {
         Debuger.Init();
-        Facade facade = Facade.CreateFacade();
-        _locate = new ServiceLocate(facade);
-        facade.Locate = _locate;
+        _facade = Facade.CreateFacade();
+        _locate = new ServiceLocate(_facade);
+        _facade.Locate = _locate;
         RegisterAllService(_locate);
         _locate.CreateAllServices();
-        var uiContext = new UiServiceContext(facade);
-        uiContext.Create();
-        _locate.GetService<UIService>().SetContext(uiContext);
     }
 
     void RegisterAllService(ServiceLocate locate)
     {
         locate.RegisterService<LoaderService>();
         locate.RegisterService<TimerService>();
-        locate.RegisterService<UIService>();
+        var service = locate.RegisterService<UIService>();
+        var uiContext = new UiServiceContext(_facade);
+        service.SetContext(uiContext);
     }
 
 
     void Update()
     {
         _locate.DoUpdate(Time.deltaTime);
-        
-        // if(Input.GetKeyDown(KeyCode.Q))
-        //     _locate.GetService<UIService>().OpenWindow("UI_Welcome");
     }
 
     void OnApplicationQuit()

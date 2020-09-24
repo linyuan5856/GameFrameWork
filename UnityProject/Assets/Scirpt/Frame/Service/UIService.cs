@@ -20,6 +20,7 @@ namespace GameFrameWork
         public UiServiceContext(Facade facade)
         {
             _facade = facade;
+            Create();
         }
 
         private Canvas _canvas;
@@ -27,7 +28,7 @@ namespace GameFrameWork
         private GameObject _cacheRootCanvas;
         public Canvas Canvas => _canvas;
         
-        public void Create()
+        private void Create()
         {
             if (_cacheRootCanvas == null)
             {

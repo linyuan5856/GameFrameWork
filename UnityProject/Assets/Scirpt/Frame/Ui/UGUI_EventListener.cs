@@ -21,19 +21,19 @@ public sealed class UGUI_EventListener : MonoBehaviour,
     {
         get
         {
-            if (eventData == null)
-                eventData = new PointerEventData(EventSystem.current);
-            eventData.pressPosition = Input.mousePosition;
-            eventData.position = Input.mousePosition;
-            if (list == null)
-                list = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(eventData, list);
-            return list.Count > 0;
+            if (_eventData == null)
+                _eventData = new PointerEventData(EventSystem.current);
+            _eventData.pressPosition = Input.mousePosition;
+            _eventData.position = Input.mousePosition;
+            if (_list == null)
+                _list = new List<RaycastResult>();
+            EventSystem.current.RaycastAll(_eventData, _list);
+            return _list.Count > 0;
         }
     }
 
-    private static List<RaycastResult> list;
-    private static PointerEventData eventData;
+    private static List<RaycastResult> _list;
+    private static PointerEventData _eventData;
 
 
     public delegate void VoidDelegate(GameObject go);
@@ -58,24 +58,24 @@ public sealed class UGUI_EventListener : MonoBehaviour,
     private Coroutine last_press_co;
     private YieldInstruction longPressWait = new WaitForSeconds(0.1f);
     private YieldInstruction longPressStart = new WaitForSeconds(0.5f);
-    private bool isLongPress; //防止长按的同时 触发OnClick
+    private bool _isLongPress; //防止长按的同时 触发OnClick
 
 
     public void OnPointerClick(PointerEventData eventData)
     {
-        if (!isLongPress && onClick != null && Time.unscaledTime - last_onclick > 0.1f)
+        if (!_isLongPress && onClick != null && Time.unscaledTime - last_onclick > 0.1f)
         {
             Debug.Log("[UGUI] OnPointerClick :" + gameObject.name);
             last_onclick = Time.unscaledTime;
             onClick(gameObject);
         }
 
-        isLongPress = false;
+        _isLongPress = false;
     }
 
     public void OnPointerDown(PointerEventData eventData)
     {
-        isLongPress = false;
+        _isLongPress = false;
         onDown?.Invoke(gameObject);
         onPointDown?.Invoke(gameObject, eventData);
         if (onLongPress != null)
@@ -88,7 +88,7 @@ public sealed class UGUI_EventListener : MonoBehaviour,
         while (true)
         {
             yield return longPressWait;
-            isLongPress = true;
+            _isLongPress = true;
             if (onLongPress != null)
                 onLongPress(gameObject);
             else
