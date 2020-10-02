@@ -6,7 +6,7 @@ public class BootStrap : MonoBehaviour
     private ServiceLocate _locate;
     private Facade _facade;
 
-    void Start()
+    void Awake()
     {
         Debuger.Init();
         _facade = Facade.CreateFacade();
@@ -14,6 +14,7 @@ public class BootStrap : MonoBehaviour
         _facade.Locate = _locate;
         RegisterAllService(_locate);
         _locate.CreateAllServices();
+        gameObject.AddComponent<GameLogicManager>();
     }
 
     void RegisterAllService(ServiceLocate locate)
