@@ -17,6 +17,8 @@ MonoBehaviour:
   m_BundleLocalCatalog: 0
   m_DisableCatalogUpdateOnStart: 0
   m_UniqueBundleIds: 0
+  m_maxConcurrentWebRequests: 500
+  m_ContiguousBundles: 0
   m_RemoteCatalogBuildPath:
     m_Id: 9ad65865c6d3fef44acd50010fb0e9d8
   m_RemoteCatalogLoadPath:
